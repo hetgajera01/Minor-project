@@ -1,0 +1,53 @@
+.App {
+  min-height: 100vh;
+  background-color: #fafafa;
+}
+
+/* ========== Notification Bell Animations ========== */
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes bounceUp {
+  0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+  40%, 43% { transform: translate3d(0,-8px,0); }
+  70% { transform: translate3d(0,-4px,0); }
+  90% { transform: translate3d(0,-2px,0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-shake     { animation: shake 0.5s ease-in-out; }
+.animate-bounce    { animation: bounceUp 1s infinite; }
+.animate-pulse     { animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+/* ========== Notification Dropdown ========== */
+.notification-enter {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
+}
+.notification-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 180ms ease-out, transform 180ms ease-out;
+}
+.notification-exit {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.notification-exit-active {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
+  transition: opacity 180ms ease-in, transform 180ms ease-in;
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f3f4f6; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
