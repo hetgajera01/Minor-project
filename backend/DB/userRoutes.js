@@ -20,6 +20,15 @@ import FarmerRequest from "./FarmerRequest.js";
 import Order from "./Order.js";
 import Request from "./Request.js";
 import Notification from "./Notification.js";
+// ── AI/ML Feature imports ─────────────────────────────────────────────
+import AIConversation    from "./AIConversation.js";
+import CropPrediction    from "./CropPrediction.js";
+import DiseasePrediction from "./DiseasePrediction.js";
+import { chat as aiChat }                       from "../services/aiService.js";
+import { recommendCrop, predictYieldAndProfit } from "../services/cropMLService.js";
+import { detectDisease }                         from "../services/diseaseService.js";
+import { getRecommendedProducts }               from "../services/recommendationService.js";
+import { v4 as uuidv4 }                          from "uuid";
 const router = express.Router();
 
 // File upload setup for logos and ID proofs
@@ -3267,6 +3276,298 @@ router.get('/incomes', async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     const incomes = await Income.find({ user: user._id }).sort({ date: -1 });
     res.json(incomes);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+// ══════════════════════════════════════════════════════════════════════
+// AI / ML ROUTES  (Feature 1-5 additions — existing routes untouched)
+// ══════════════════════════════════════════════════════════════════════
+
+// ── Feature 1: AI Agricultural Assistant ──────────────────────────────
+
+// POST /api/user/ai/chat
+router.post('/ai/chat', async (req, res) => {
+  try {
+    const { email, message, sessionId, context = {} } = req.body;
+    if (!email || !message) return res.status(400).json({ message: 'email and message are required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Enrich context with DB data
+    const [recentExpenses, recentIncome] = await Promise.all([
+      Expense.find({ user: user._id }).sort({ date: -1 }).limit(5),
+      Income.find({ user: user._id }).sort({ date: -1 }).limit(5),
+    ]);
+    const totalExpenses = recentExpenses.reduce((s, e) => s + e.amount, 0);
+    const totalIncome   = recentIncome.reduce((s, i) => s + i.amount, 0);
+
+    // Get or create conversation session
+    const sid = sessionId || uuidv4();
+    let conversation = await AIConversation.findOne({ userId: user._id, sessionId: sid });
+    if (!conversation) {
+      conversation = new AIConversation({
+        userId: user._id,
+        sessionId: sid,
+        messages: [],
+        context: { crop: context.crop, location: user.location, season: context.season },
+      });
+    }
+
+    // Get response from Gemini
+    const { response, source } = await aiChat(
+      message,
+      conversation.messages.slice(-10),
+      { ...context, location: user.location, totalExpenses, totalIncome }
+    );
+
+    // Save to history
+    conversation.messages.push({ role: 'user',      content: message,  timestamp: new Date() });
+    conversation.messages.push({ role: 'assistant',  content: response, timestamp: new Date() });
+    if (conversation.messages.length > 50) conversation.messages = conversation.messages.slice(-50);
+    await conversation.save();
+
+    res.json({ response, sessionId: sid, source });
+  } catch (err) {
+    console.error('AI chat error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/user/ai/history?email=&sessionId=
+router.get('/ai/history', async (req, res) => {
+  try {
+    const { email, sessionId } = req.query;
+    if (!email) return res.status(400).json({ message: 'email required' });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    let query = { userId: user._id };
+    if (sessionId) query.sessionId = sessionId;
+
+    const conversations = await AIConversation.find(query)
+      .sort({ updatedAt: -1 })
+      .limit(5)
+      .lean();
+
+    res.json(conversations);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── Feature 2: Crop Recommendation ────────────────────────────────────
+
+// POST /api/user/crop-recommend  (matches existing frontend call)
+router.post('/crop-recommend', async (req, res) => {
+  try {
+    const { email, N, P, K, ph, temperature, humidity, rainfall, location, season, landArea } = req.body;
+    const inputs = {
+      N: Number(N), P: Number(P), K: Number(K),
+      ph: Number(ph), temperature: Number(temperature),
+      humidity: Number(humidity), rainfall: Number(rainfall),
+      location, season, landArea: Number(landArea) || 1,
+    };
+
+    // Validate required numeric fields
+    const nums = [inputs.N, inputs.P, inputs.K, inputs.ph, inputs.temperature, inputs.humidity, inputs.rainfall];
+    if (nums.some(isNaN)) return res.status(400).json({ message: 'All soil/weather parameters must be valid numbers' });
+
+    const result = await recommendCrop(inputs);
+
+    // Save prediction if farmer is logged in
+    if (email) {
+      const user = await User.findOne({ email });
+      if (user) {
+        const pred = new CropPrediction({
+          userId: user._id,
+          cropName: result.recommended.crop,
+          inputs,
+          result: {
+            score:       result.recommended.score,
+            confidence:  result.recommended.confidence,
+            description: result.recommended.description,
+            yieldEst:    result.recommended.yieldTons,
+            landArea:    inputs.landArea,
+            costEst:     result.recommended.costEst,
+            revenueEst:  result.recommended.revenueEst,
+            profitEst:   result.recommended.profitEst,
+            alternatives: result.alternatives,
+          },
+        });
+        await pred.save();
+        result.predictionId = pred._id;
+      }
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('Crop recommend error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── Feature 3: Yield & Profit Prediction ──────────────────────────────
+
+// POST /api/user/crop/yield-predict
+router.post('/crop/yield-predict', async (req, res) => {
+  try {
+    const { email, crop, landArea, season, additionalCosts = {} } = req.body;
+    if (!crop) return res.status(400).json({ message: 'crop is required' });
+
+    // Pull existing expenses from DB to integrate with prediction
+    let existingExpenses = 0;
+    let userId = null;
+    if (email) {
+      const user = await User.findOne({ email });
+      if (user) {
+        userId = user._id;
+        const expenses = await Expense.find({ user: user._id, crop });
+        existingExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+      }
+    }
+
+    const result = await predictYieldAndProfit({
+      crop, landArea: Number(landArea) || 1, season,
+      existingExpenses, additionalCosts,
+    });
+
+    // Save prediction
+    if (userId) {
+      const pred = new CropPrediction({
+        userId,
+        cropName: crop,
+        inputs: { location: req.body.location, season, landArea: Number(landArea) || 1 },
+        result: {
+          yieldEst:   result.predictedYield,
+          landArea:   Number(landArea) || 1,
+          costEst:    result.predictedCost,
+          revenueEst: result.predictedRevenue,
+          profitEst:  result.predictedProfit,
+        },
+      });
+      await pred.save();
+      result.predictionId = pred._id;
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('Yield predict error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/user/crop/predictions?email=
+router.get('/crop/predictions', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ message: 'email required' });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const predictions = await CropPrediction.find({ userId: user._id }).sort({ createdAt: -1 }).limit(10);
+    res.json(predictions);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PATCH /api/user/crop/predictions/:id/actual — record actual harvest data
+router.patch('/crop/predictions/:id/actual', async (req, res) => {
+  try {
+    const { email, yieldTons, revenueActual, expenseActual } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const pred = await CropPrediction.findOne({ _id: req.params.id, userId: user._id });
+    if (!pred) return res.status(404).json({ message: 'Prediction not found' });
+
+    pred.actual = {
+      yieldTons: Number(yieldTons),
+      revenueActual: Number(revenueActual),
+      expenseActual: Number(expenseActual),
+      profitActual: Number(revenueActual) - Number(expenseActual),
+      recordedAt: new Date(),
+    };
+    pred.status = 'harvested';
+    await pred.save();
+    res.json({ message: 'Actual data recorded', prediction: pred });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── Feature 4: Disease Detection ──────────────────────────────────────
+
+// POST /api/user/disease/detect  (multipart/form-data with 'image' field)
+router.post('/disease/detect', upload.single('image'), async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!req.file) return res.status(400).json({ message: 'Image file is required' });
+
+    const imagePath = path.resolve('uploads', req.file.filename);
+    const result = await detectDisease(imagePath);
+
+    // Save to DB
+    let savedResult = null;
+    if (email) {
+      const user = await User.findOne({ email });
+      if (user) {
+        const dpred = new DiseasePrediction({
+          userId: user._id,
+          imagePath: `/uploads/${req.file.filename}`,
+          detectedCrop: result.detectedCrop,
+          disease:      result.disease,
+          confidence:   result.confidence,
+          isHealthy:    result.isHealthy,
+          symptoms:     result.symptoms,
+          causes:       result.causes,
+          prevention:   result.prevention,
+          treatment:    result.treatment,
+          nextSteps:    result.nextSteps,
+          source:       result.source,
+        });
+        await dpred.save();
+        savedResult = dpred._id;
+      }
+    }
+
+    res.json({ ...result, imageUrl: `/uploads/${req.file.filename}`, detectionId: savedResult });
+  } catch (err) {
+    console.error('Disease detect error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/user/disease/history?email=
+router.get('/disease/history', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ message: 'email required' });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const history = await DiseasePrediction.find({ userId: user._id }).sort({ createdAt: -1 }).limit(20);
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── Feature 5: Smart Marketplace Recommendations ───────────────────────
+
+// GET /api/user/marketplace/recommended?email=&crop=&limit=
+router.get('/marketplace/recommended', async (req, res) => {
+  try {
+    const { email, crop = 'General', limit = 8 } = req.query;
+    let farmerId = null;
+    if (email) {
+      const user = await User.findOne({ email });
+      if (user) farmerId = user._id;
+    }
+    const products = await getRecommendedProducts(crop, farmerId, Number(limit));
+    res.json(products);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

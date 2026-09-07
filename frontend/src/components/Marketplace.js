@@ -290,7 +290,7 @@ const Marketplace = () => {
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
-                      Stock: {product.quantity}
+                      Stock: {product.quantity} kg
                     </div>
                   </div>
                   
@@ -335,7 +335,7 @@ const Marketplace = () => {
               <p className="text-sm text-gray-600 mb-2">{selectedProduct.category}</p>
               <div className="flex items-center justify-between">
                 <span className="text-lg font-bold text-[#2F855A]">
-                  ₹{calculateDiscountedPrice(selectedProduct)} per unit
+                  ₹{calculateDiscountedPrice(selectedProduct)}/kg
                 </span>
                 {selectedProduct.discount > 0 && (
                   <span className="text-sm text-red-600">-{selectedProduct.discount}% off</span>
@@ -355,7 +355,7 @@ const Marketplace = () => {
                   className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-[#2F855A] text-lg"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">Available: {selectedProduct.quantity} units</p>
+                <p className="text-xs text-gray-500 mt-1">Available: {selectedProduct.quantity} kg in stock</p>
               </div>
               
               <div>

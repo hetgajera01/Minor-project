@@ -18,11 +18,11 @@
 
 // // const connectDB = async () => {
 // //   try {
-// //     const conn = await mongoose.connect("mongodb+srv://jadeja:meet6782@sgp.hr5tk.mongodb.net/?retryWrites=true&w=majority&appName=SGP", {
+// //     const conn = await mongoose.connect(process.env.MONGO_URI, {
 // //       useNewUrlParser: true,
 // //       useUnifiedTopology: true,
 // //     });
-
+// //
 // //     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 // //   } catch (error) {
 // //     console.error(`❌ Error: ${error.message}`);
@@ -34,12 +34,12 @@
 // // MongoDB Connection
 // // const connectDB = async () => {
 // //   try {
-// //     const conn = await mongoose.connect("mongodb+srv://jadeja:jadeja@sgp.hr5tk.mongodb.net/?retryWrites=true&w=majority&appName=SGP");
+// //     const conn = await mongoose.connect(process.env.MONGO_URI);
 // //     console.log(`MongoDB Connected: ${conn.connection.host}`);
 // //   } catch (error) {
 // //     console.error('❌ Error connecting to MongoDB:', error.message);
 // //     console.log('💡 Please make sure MongoDB is running or use MongoDB Atlas');
-// //     console.log('🔗 For MongoDB Atlas: Update MONGO_URI in backend/config.env');
+// //     console.log('🔗 For MongoDB Atlas: Update MONGO_URI in backend/.env');
 // //     console.log('🔄 Retrying connection in 5 seconds...');
 // //     setTimeout(connectDB, 5000);
 // //   }

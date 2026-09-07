@@ -727,12 +727,12 @@ const AgroDashboard = () => {
                       <p className="text-sm text-gray-600 mb-2">{product.category}</p>
                       <p className="text-sm text-gray-700 mb-2">{product.description || 'No description'}</p>
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-lg font-bold text-[#2F855A]">₹{product.price}</span>
+                        <span className="text-lg font-bold text-[#2F855A]">₹{product.price}/kg</span>
                         {product.discount > 0 && (
                           <span className="text-sm text-red-600">-{product.discount}%</span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-4">Quantity: {product.quantity}</p>
+                      <p className="text-sm text-gray-600 mb-4">Stock: {product.quantity} kg</p>
                       <div className="flex items-center mb-2">
                         <span className={`px-2 py-1 rounded text-xs ${
                           product.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'

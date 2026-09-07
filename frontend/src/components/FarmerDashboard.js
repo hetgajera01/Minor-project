@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaMoneyBillWave, FaChartPie, FaSeedling, FaUserCircle, FaPlus, FaFileAlt, FaSun, FaUsers, FaSignOutAlt, FaHome, FaCog, FaShoppingCart } from 'react-icons/fa';
+import { FaMoneyBillWave, FaChartPie, FaSeedling, FaUserCircle, FaPlus, FaFileAlt, FaSun, FaUsers, FaSignOutAlt, FaHome, FaCog, FaShoppingCart, FaRobot, FaBug } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { GiFarmTractor, GiWheat } from 'react-icons/gi';
 import axios from "axios";
@@ -9,6 +9,8 @@ import CropTracker from './CropTracker';
 import CostAnalysis from './CostAnalysis';
 import NotificationCenter from './NotificationCenter';
 import { WeatherWidgetInline, WeatherWidgetCard } from './WeatherWidget';
+import AgriAI from './AgriAI';
+import DiseaseDetection from './DiseaseDetection';
 
 const FarmerDashboard = () => {
   const userName = localStorage.getItem("userName");
@@ -44,6 +46,8 @@ const FarmerDashboard = () => {
   const [showCostAnalysis, setShowCostAnalysis] = React.useState(false);
   const [showYieldPrediction, setShowYieldPrediction] = React.useState(false);
   const [showCropRecommendation, setShowCropRecommendation] = React.useState(false);
+  const [showAgriAI, setShowAgriAI] = React.useState(false);
+  const [showDiseaseDetection, setShowDiseaseDetection] = React.useState(false);
   const [alerts, setAlerts] = React.useState([]);
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [loadingAlerts, setLoadingAlerts] = React.useState(false);
@@ -467,6 +471,8 @@ const FarmerDashboard = () => {
           <button onClick={() => setShowIndividualTracker(true)} title="Individual Finance Tracker" style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaUsers style={{fontSize:10}} /> Finance Tracker</button>
           <button onClick={() => setShowYieldPrediction(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaSeedling style={{fontSize:10}} /> Yield Prediction</button>
           <button onClick={() => setShowCropRecommendation(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaSeedling style={{fontSize:10}} /> Crop Recommendation</button>
+          <button onClick={() => setShowAgriAI(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'linear-gradient(135deg,#15803d,#166534)',color:'#fff',border:'none',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }}><FaRobot style={{fontSize:11}} /> AgriAI</button>
+          <button onClick={() => setShowDiseaseDetection(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#dc2626',border:'1px solid #fecaca',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#fef2f2'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaBug style={{fontSize:11}} /> Disease Detect</button>
           <button onClick={refreshAllData} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:500,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}>&#8635; Refresh</button>
         </div>
       </section>
@@ -821,7 +827,27 @@ const FarmerDashboard = () => {
               &times;
             </button>
             {/* CropRecommendation component */}
-            {React.createElement(require('./CropRecommendation').default)}
+            {React.createElement(require('./CropRecommendation').default, { userEmail })}
+          </div>
+        </div>
+      )}
+
+      {/* AgriAI Modal */}
+      {showAgriAI && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-2xl max-h-[92vh] overflow-y-auto relative">
+            <button className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowAgriAI(false)} aria-label="Close">&times;</button>
+            <AgriAI userEmail={userEmail} userLocation={localStorage.getItem('userLocation') || ''} />
+          </div>
+        </div>
+      )}
+
+      {/* Disease Detection Modal */}
+      {showDiseaseDetection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-3xl max-h-[92vh] overflow-y-auto relative">
+            <button className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowDiseaseDetection(false)} aria-label="Close">&times;</button>
+            <DiseaseDetection userEmail={userEmail} />
           </div>
         </div>
       )}
