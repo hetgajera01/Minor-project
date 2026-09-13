@@ -1,93 +1,96 @@
 import React from 'react';
-import { FaMoneyBillWave, FaChartPie, FaSeedling, FaUserCircle, FaPlus, FaFileAlt, FaSun, FaUsers, FaSignOutAlt, FaHome, FaCog, FaShoppingCart, FaRobot, FaBug } from 'react-icons/fa';
+import {
+  FaMoneyBillWave, FaChartPie, FaSeedling, FaUserCircle, FaPlus,
+  FaFileAlt, FaUsers, FaSignOutAlt, FaCog,
+  FaShoppingCart, FaRobot, FaBug, FaChartLine, FaBell, FaTh,
+  FaBars, FaLeaf, FaArrowUp, FaArrowDown, FaTrash, FaSync,
+} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { GiFarmTractor, GiWheat } from 'react-icons/gi';
-import axios from "axios";
+import axios from 'axios';
 import Reports from './Reports';
 import IndividualFinanceTracker from './IndividualFinanceTracker';
 import CropTracker from './CropTracker';
 import CostAnalysis from './CostAnalysis';
 import NotificationCenter from './NotificationCenter';
-import { WeatherWidgetInline, WeatherWidgetCard } from './WeatherWidget';
+import { WeatherWidgetInline } from './WeatherWidget';
 import AgriAI from './AgriAI';
 import DiseaseDetection from './DiseaseDetection';
 
-const FarmerDashboard = () => {
-  const userName = localStorage.getItem("userName");
-  const userEmail = localStorage.getItem("userEmail");
-  const navigate = useNavigate();
-  const [language, setLanguage] = React.useState('en');
-  const [offline, setOffline] = React.useState(false);
-  const [showExpenseModal, setShowExpenseModal] = React.useState(false);
-  const [expenseForm, setExpenseForm] = React.useState({
-    amount: '',
-    category: '',
-    crop: '',
-    date: '',
-    note: '',
-  });
-  const [expenseList, setExpenseList] = React.useState([]);
-  const [expenseMsg, setExpenseMsg] = React.useState("");
-  const [expenseError, setExpenseError] = React.useState("");
-  const [showIncomeModal, setShowIncomeModal] = React.useState(false);
-  const [incomeForm, setIncomeForm] = React.useState({
-    amount: '',
-    category: '',
-    crop: '',
-    date: '',
-    note: '',
-  });
-  const [incomeList, setIncomeList] = React.useState([]);
-  const [incomeMsg, setIncomeMsg] = React.useState("");
-  const [incomeError, setIncomeError] = React.useState("");
-  const [showReports, setShowReports] = React.useState(false);
-  const [showIndividualTracker, setShowIndividualTracker] = React.useState(false);
-  const [showCropTracker, setShowCropTracker] = React.useState(false);
-  const [showCostAnalysis, setShowCostAnalysis] = React.useState(false);
-  const [showYieldPrediction, setShowYieldPrediction] = React.useState(false);
-  const [showCropRecommendation, setShowCropRecommendation] = React.useState(false);
-  const [showAgriAI, setShowAgriAI] = React.useState(false);
-  const [showDiseaseDetection, setShowDiseaseDetection] = React.useState(false);
-  const [alerts, setAlerts] = React.useState([]);
-  const [showNotifications, setShowNotifications] = React.useState(false);
-  const [loadingAlerts, setLoadingAlerts] = React.useState(false);
-  const [showProfilePrompt, setShowProfilePrompt] = React.useState(false);
-  const [statsLoading, setStatsLoading] = React.useState(false);
-  const [dashboardStats, setDashboardStats] = React.useState({
-    income: 0,
-    expenses: 0,
-    budgetUtilizationPercent: null,
-    topCrop: { name: null, percent: null },
-  });
-  const [showAllExpenses, setShowAllExpenses] = React.useState(false);
-  const [showAllIncome, setShowAllIncome] = React.useState(false);
-  const [crops, setCrops] = React.useState([]); // for crop dropdown in forms
+/* ── Sidebar nav items ─────────────────────────────────── */
+const NAV_ITEMS = [
+  { key: 'overview',     icon: <FaTh />,           label: 'Dashboard',        section: 'main' },
+  { key: 'finance',      icon: <FaMoneyBillWave />, label: 'Finance',          section: 'main' },
+  { key: 'cropTracker',  icon: <GiWheat />,         label: 'Crop Tracker',     section: 'main' },
+  { key: 'costAnalysis', icon: <FaChartLine />,     label: 'Cost Analysis',    section: 'main' },
+  { key: 'finTracker',   icon: <FaUsers />,         label: 'Finance Tracker',  section: 'main' },
+  { key: 'reports',      icon: <FaFileAlt />,       label: 'Reports',          section: 'main' },
+  { key: 'agriAI',       icon: <FaRobot />,         label: 'AgriAI',           section: 'ai' },
+  { key: 'disease',      icon: <FaBug />,           label: 'Disease Detect',   section: 'ai' },
+  { key: 'yieldPred',    icon: <FaSeedling />,      label: 'Yield Prediction', section: 'ai' },
+  { key: 'cropRec',      icon: <FaLeaf />,          label: 'Crop Recommend',   section: 'ai' },
+];
 
-  // Fetch transactions when component mounts
+const FarmerDashboard = () => {
+  const userName  = localStorage.getItem('userName');
+  const userEmail = localStorage.getItem('userEmail');
+  const navigate  = useNavigate();
+
+  /* ── sidebar state ────────────────────────────────────── */
+  const [sidebarOpen,     setSidebarOpen]     = React.useState(false);
+  const [activeView,      setActiveView]      = React.useState('overview');
+
+  /* ── form / modal state (unchanged) ──────────────────── */
+  const [showExpenseModal,      setShowExpenseModal]      = React.useState(false);
+  const [expenseForm,           setExpenseForm]           = React.useState({ amount: '', category: '', crop: '', date: '', note: '' });
+  const [expenseList,           setExpenseList]           = React.useState([]);
+  const [expenseMsg,            setExpenseMsg]            = React.useState('');
+  const [expenseError,          setExpenseError]          = React.useState('');
+  const [showIncomeModal,       setShowIncomeModal]       = React.useState(false);
+  const [incomeForm,            setIncomeForm]            = React.useState({ amount: '', category: '', crop: '', date: '', note: '' });
+  const [incomeList,            setIncomeList]            = React.useState([]);
+  const [incomeMsg,             setIncomeMsg]             = React.useState('');
+  const [incomeError,           setIncomeError]           = React.useState('');
+  const [showReports,           setShowReports]           = React.useState(false);
+  const [showIndividualTracker, setShowIndividualTracker] = React.useState(false);
+  const [showCropTracker,       setShowCropTracker]       = React.useState(false);
+  const [showCostAnalysis,      setShowCostAnalysis]      = React.useState(false);
+  const [showYieldPrediction,   setShowYieldPrediction]   = React.useState(false);
+  const [showCropRecommendation,setShowCropRecommendation]= React.useState(false);
+  const [showAgriAI,            setShowAgriAI]            = React.useState(false);
+  const [showDiseaseDetection,  setShowDiseaseDetection]  = React.useState(false);
+  const [alerts,                setAlerts]                = React.useState([]);
+  const [showNotifications,     setShowNotifications]     = React.useState(false);
+  const [loadingAlerts,         setLoadingAlerts]         = React.useState(false);
+  const [showProfilePrompt,     setShowProfilePrompt]     = React.useState(false);
+  const [statsLoading,          setStatsLoading]          = React.useState(false);
+  const [dashboardStats,        setDashboardStats]        = React.useState({ income: 0, expenses: 0, budgetUtilizationPercent: null, topCrop: { name: null, percent: null } });
+  const [showAllExpenses,       setShowAllExpenses]       = React.useState(false);
+  const [showAllIncome,         setShowAllIncome]         = React.useState(false);
+  const [crops,                 setCrops]                 = React.useState([]);
+
+  /* ── data fetching (unchanged) ────────────────────────── */
   React.useEffect(() => {
     if (userEmail) {
       fetchTransactions();
       fetchAlerts();
       fetchReportStats();
       fetchCrops();
-      
-      // Check if this is a new user and show profile prompt
       const isFirstLogin = localStorage.getItem('isFirstLogin') === 'true';
-      if (isFirstLogin) {
-        setShowProfilePrompt(true);
-        localStorage.setItem('isFirstLogin', 'false'); // Mark as not first login anymore
-      }
+      if (isFirstLogin) { setShowProfilePrompt(true); localStorage.setItem('isFirstLogin', 'false'); }
     }
   }, [userEmail]);
 
-  // Fallback UI if not logged in
   if (!userName) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-[#f7fafc] to-[#e6fffa]">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <h1 className="text-4xl font-bold text-[#2F855A] mb-4">404 - User Not Found</h1>
-          <p className="text-lg text-gray-700 mb-6">You must be logged in to view the dashboard.</p>
-          <a href="/login" className="inline-block bg-[#D69E2E] text-white py-3 px-6 rounded-lg font-semibold text-lg shadow-xl hover:bg-[#B7791F] transition-all duration-200">Go to Login</a>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f6fa' }}>
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: '48px 40px', textAlign: 'center', maxWidth: 400, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+          <div style={{ width: 64, height: 64, background: '#dcfce7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 28 }}>🌱</div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#111827', marginBottom: 8 }}>Not Logged In</h2>
+          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>Please log in to access your dashboard.</p>
+          <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#16a34a', color: '#fff', padding: '11px 24px', borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+            Go to Login →
+          </a>
         </div>
       </div>
     );
@@ -98,718 +101,659 @@ const FarmerDashboard = () => {
       const response = await axios.post('/api/user/all-transactions', { email: userEmail });
       setIncomeList(response.data.income);
       setExpenseList(response.data.expenses);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-    }
+    } catch (error) { console.error('Error fetching transactions:', error); }
   };
 
   const fetchAlerts = async () => {
     try {
       setLoadingAlerts(true);
-      const response = await axios.get('/api/user/alerts', { 
-        params: { email: userEmail } 
-      });
+      const response = await axios.get('/api/user/alerts', { params: { email: userEmail } });
       setAlerts(response.data || []);
-    } catch (error) {
-      console.error('Error fetching alerts:', error);
-      setAlerts([]);
-    } finally {
-      setLoadingAlerts(false);
-    }
+    } catch (error) { console.error('Error fetching alerts:', error); setAlerts([]); }
+    finally { setLoadingAlerts(false); }
   };
 
   const fetchCrops = async () => {
     try {
       const res = await axios.get('/api/user/crop', { params: { email: userEmail } });
       setCrops(res.data || []);
-    } catch (e) {
-      console.error('Failed to fetch crops:', e);
-    }
+    } catch (e) { console.error('Failed to fetch crops:', e); }
   };
 
   const fetchReportStats = async () => {
     try {
       setStatsLoading(true);
-      const response = await axios.post('/api/user/reports', {
-        email: userEmail,
-        filterType: 'month',
-      });
+      const response = await axios.post('/api/user/reports', { email: userEmail, filterType: 'month' });
       const { totalIncome = 0, totalExpenses = 0, cropSummaries = [] } = response.data || {};
-
-      const totals = cropSummaries.reduce(
-        (acc, c) => {
-          acc.planned += Number(c.plannedBudget || 0);
-          acc.spent += Number(c.totalSpent || 0);
-          return acc;
-        },
-        { planned: 0, spent: 0 }
-      );
-
-      const budgetUtilizationPercent = totals.planned > 0
-        ? Math.round((totals.spent / totals.planned) * 100)
-        : null;
-
+      const totals = cropSummaries.reduce((acc, c) => { acc.planned += Number(c.plannedBudget || 0); acc.spent += Number(c.totalSpent || 0); return acc; }, { planned: 0, spent: 0 });
+      const budgetUtilizationPercent = totals.planned > 0 ? Math.round((totals.spent / totals.planned) * 100) : null;
       const usableCrops = cropSummaries.filter(c => Number(c.plannedBudget) > 0);
       let topCrop = { name: null, percent: null };
       if (usableCrops.length > 0) {
-        const ranked = usableCrops
-          .map(c => ({ name: c.name, percent: (Number(c.totalSpent || 0) / Number(c.plannedBudget)) * 100 }))
-          .sort((a, b) => b.percent - a.percent);
+        const ranked = usableCrops.map(c => ({ name: c.name, percent: (Number(c.totalSpent || 0) / Number(c.plannedBudget)) * 100 })).sort((a, b) => b.percent - a.percent);
         topCrop = { name: ranked[0].name, percent: Math.round(ranked[0].percent) };
       }
-
-      setDashboardStats({
-        income: Number(totalIncome) || 0,
-        expenses: Number(totalExpenses) || 0,
-        budgetUtilizationPercent,
-        topCrop,
-      });
-    } catch (error) {
-      console.error('Error fetching monthly report stats:', error);
-    } finally {
-      setStatsLoading(false);
-    }
+      setDashboardStats({ income: Number(totalIncome) || 0, expenses: Number(totalExpenses) || 0, budgetUtilizationPercent, topCrop });
+    } catch (error) { console.error('Error fetching monthly report stats:', error); }
+    finally { setStatsLoading(false); }
   };
 
-  const refreshAllData = async () => {
-    try {
-      // Refresh all data in parallel
-      await Promise.all([
-        fetchTransactions(),
-        fetchAlerts(),
-        fetchReportStats()
-      ]);
-    } catch (error) {
-      console.error('Error refreshing all data:', error);
-    }
-  };
+  const refreshAllData = async () => { await Promise.all([fetchTransactions(), fetchAlerts(), fetchReportStats()]); };
 
   const handleLogout = () => {
-    // Clear all user data from localStorage
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("isFirstLogin");
-    
-    // Redirect to login page
-    window.location.href = "/login";
+    ['userName', 'userEmail', 'isFirstLogin', 'role'].forEach(k => localStorage.removeItem(k));
+    window.location.href = '/login';
   };
 
-  // Greeting based on time
-  const hour = new Date().getHours();
-  let greeting = 'Good Morning';
-  if (hour >= 12 && hour < 18) greeting = 'Good Afternoon';
-  else if (hour >= 18) greeting = 'Good Evening';
-
-  // Motivational quotes
-  const quotes = [
-    '"The future belongs to those who prepare for it today."',
-    '"A good farmer is nothing more nor less than a handy man with a sense of humus."',
-    '"Sow the seeds of hard work, and reap the fruits of success."',
-    '"Every blade of grass has its angel that bends over it and whispers, Grow, Grow."',
-  ];
-  const quote = quotes[new Date().getDate() % quotes.length];
-
-  // Real stats from backend
-  const formatCurrency = (amount) => `₹${Number(amount || 0).toLocaleString('en-IN')}`;
-
-  const statsCards = [
-    {
-      title: "This Month's Income",
-      value: formatCurrency(dashboardStats.income),
-      icon: <FaMoneyBillWave className="text-4xl text-green-500" />,
-      gradient: 'from-green-200 to-emerald-100',
-    },
-    {
-      title: "This Month's Expenses",
-      value: formatCurrency(dashboardStats.expenses),
-      icon: <FaChartPie className="text-4xl text-yellow-500" />,
-      gradient: 'from-yellow-200 to-orange-100',
-    },
-    {
-      title: 'Budget Utilization',
-      value: dashboardStats.budgetUtilizationPercent == null ? '—' : `${dashboardStats.budgetUtilizationPercent}%`,
-      icon: <FaSeedling className="text-4xl text-emerald-500" />,
-      gradient: 'from-emerald-200 to-green-100',
-    },
-    {
-      title: dashboardStats.topCrop.name ? `Top Crop: ${dashboardStats.topCrop.name}` : 'Top Crop',
-      value: dashboardStats.topCrop.percent == null ? '—' : `${dashboardStats.topCrop.percent}%`,
-      icon: <GiWheat className="text-4xl text-yellow-600" />,
-      gradient: 'from-yellow-100 to-amber-100',
-    },
-  ];
-
-  // Add Expense handler
-  const handleExpenseChange = (e) => {
-    setExpenseForm({ ...expenseForm, [e.target.name]: e.target.value });
-  };
+  /* ── expense / income handlers (unchanged) ────────────── */
+  const handleExpenseChange = (e) => setExpenseForm({ ...expenseForm, [e.target.name]: e.target.value });
   const handleExpenseSubmit = async (e) => {
-    e.preventDefault();
-    setExpenseMsg("");
-    setExpenseError("");
+    e.preventDefault(); setExpenseMsg(''); setExpenseError('');
     try {
-      const res = await axios.post('/api/user/expense', {
-        email: userEmail,
-        ...expenseForm,
-      });
-      setExpenseMsg("Expense added successfully!");
+      const res = await axios.post('/api/user/expense', { email: userEmail, ...expenseForm });
+      setExpenseMsg('Expense added successfully!');
       setExpenseList([res.data.expense, ...expenseList]);
-      setShowExpenseModal(false);
-      setExpenseForm({ amount: '', category: '', crop: '', date: '', note: '' });
+      setShowExpenseModal(false); setExpenseForm({ amount: '', category: '', crop: '', date: '', note: '' });
       fetchReportStats();
-    } catch (err) {
-      setExpenseError(err.response?.data?.message || "Failed to add expense");
-    }
+    } catch (err) { setExpenseError(err.response?.data?.message || 'Failed to add expense'); }
   };
-
   const handleDeleteExpense = async (expenseId) => {
     if (!window.confirm('Delete this expense?')) return;
-    try {
-      await axios.delete(`/api/user/expense/${expenseId}`, { data: { email: userEmail } });
-      setExpenseList(expenseList.filter(e => e._id !== expenseId));
-      fetchReportStats();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete expense');
-    }
+    try { await axios.delete(`/api/user/expense/${expenseId}`, { data: { email: userEmail } }); setExpenseList(expenseList.filter(e => e._id !== expenseId)); fetchReportStats(); }
+    catch (err) { alert(err.response?.data?.message || 'Failed to delete expense'); }
   };
-
-  // Add Income handler
-  const handleIncomeChange = (e) => {
-    setIncomeForm({ ...incomeForm, [e.target.name]: e.target.value });
-  };
+  const handleIncomeChange = (e) => setIncomeForm({ ...incomeForm, [e.target.name]: e.target.value });
   const handleIncomeSubmit = async (e) => {
-    e.preventDefault();
-    setIncomeMsg("");
-    setIncomeError("");
+    e.preventDefault(); setIncomeMsg(''); setIncomeError('');
     try {
-      const res = await axios.post('/api/user/income', {
-        email: userEmail,
-        ...incomeForm,
-      });
-      setIncomeMsg("Income added successfully!");
+      const res = await axios.post('/api/user/income', { email: userEmail, ...incomeForm });
+      setIncomeMsg('Income added successfully!');
       setIncomeList([res.data.income, ...incomeList]);
-      setShowIncomeModal(false);
-      setIncomeForm({ amount: '', category: '', crop: '', date: '', note: '' });
+      setShowIncomeModal(false); setIncomeForm({ amount: '', category: '', crop: '', date: '', note: '' });
       fetchReportStats();
-    } catch (err) {
-      setIncomeError(err.response?.data?.message || "Failed to add income");
-    }
+    } catch (err) { setIncomeError(err.response?.data?.message || 'Failed to add income'); }
   };
-
   const handleDeleteIncome = async (incomeId) => {
     if (!window.confirm('Delete this income entry?')) return;
-    try {
-      await axios.delete(`/api/user/income/${incomeId}`, { data: { email: userEmail } });
-      setIncomeList(incomeList.filter(i => i._id !== incomeId));
-      fetchReportStats();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete income');
-    }
-  };
-
-  // Notification handlers
-  const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
+    try { await axios.delete(`/api/user/income/${incomeId}`, { data: { email: userEmail } }); setIncomeList(incomeList.filter(i => i._id !== incomeId)); fetchReportStats(); }
+    catch (err) { alert(err.response?.data?.message || 'Failed to delete income'); }
   };
 
   const markAsRead = async (alertId) => {
-    try {
-      await axios.patch(`/api/user/alerts/${alertId}/read`, { email: userEmail });
-      setAlerts(alerts.map(alert => 
-        alert._id === alertId ? { ...alert, isRead: true } : alert
-      ));
-    } catch (error) {
-      console.error('Error marking alert as read:', error);
-    }
+    try { await axios.patch(`/api/user/alerts/${alertId}/read`, { email: userEmail }); setAlerts(alerts.map(a => a._id === alertId ? { ...a, isRead: true } : a)); }
+    catch (error) { console.error('Error marking alert as read:', error); }
   };
-
   const dismissAlert = async (alertId) => {
-    try {
-      await axios.patch(`/api/user/alerts/${alertId}/dismiss`, { email: userEmail });
-      setAlerts(alerts.filter(alert => alert._id !== alertId));
-    } catch (error) {
-      console.error('Error dismissing alert:', error);
-    }
+    try { await axios.patch(`/api/user/alerts/${alertId}/dismiss`, { email: userEmail }); setAlerts(alerts.filter(a => a._id !== alertId)); }
+    catch (error) { console.error('Error dismissing alert:', error); }
   };
 
-  const unreadCount = alerts.filter(alert => !alert.isRead).length;
+  const unreadCount = alerts.filter(a => !a.isRead).length;
+  const formatCurrency = (amount) => `₹${Number(amount || 0).toLocaleString('en-IN')}`;
 
-  // Helper function to get alert type styling
-  const getAlertTypeStyle = (alertType) => {
-    switch (alertType) {
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'over-budget':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'custom-threshold':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-    }
+  /* ── derived values ───────────────────────────────────── */
+  const netProfit = dashboardStats.income - dashboardStats.expenses;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+  const greetingEmoji = hour < 12 ? '🌅' : hour < 18 ? '☀️' : '🌙';
+
+  /* ── sidebar nav handler ──────────────────────────────── */
+  const handleNav = (key) => {
+    setActiveView(key);
+    setSidebarOpen(false);
+    if (key === 'reports')      { setShowReports(true); return; }
+    if (key === 'cropTracker')  { setShowCropTracker(true); return; }
+    if (key === 'costAnalysis') { setShowCostAnalysis(true); return; }
+    if (key === 'finTracker')   { setShowIndividualTracker(true); return; }
+    if (key === 'yieldPred')    { setShowYieldPrediction(true); return; }
+    if (key === 'cropRec')      { setShowCropRecommendation(true); return; }
+    if (key === 'agriAI')       { setShowAgriAI(true); return; }
+    if (key === 'disease')      { setShowDiseaseDetection(true); return; }
   };
 
-  // Helper function to get alert icon
-  const getAlertIcon = (alertType) => {
-    switch (alertType) {
-      case 'warning':
-        return '🟡';
-      case 'over-budget':
-        return '🔴';
-      case 'custom-threshold':
-        return '🟢';
-      default:
-        return 'ℹ️';
-    }
-  };
+  /* ── shared input/label style ─────────────────────────── */
+  const inputStyle = { width: '100%', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '10px 14px', fontSize: 13.5, color: '#111827', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
+  const labelStyle = { fontSize: 12.5, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 5 };
+  const focusIn  = (e) => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; };
+  const focusOut = (e) => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; };
 
-  // Helper function to format timestamp
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+  /* ─── KPI cards data ──────────────────────────────────── */
+  const kpiCards = [
+    { accent: '#16a34a', bg: '#f0fdf4', iconBg: '#dcfce7', icon: <FaMoneyBillWave style={{ fontSize: 17, color: '#16a34a' }} />, label: "This Month's Income", value: statsLoading ? '...' : formatCurrency(dashboardStats.income), trend: null },
+    { accent: '#d97706', bg: '#fffbeb', iconBg: '#fef3c7', icon: <FaChartPie style={{ fontSize: 17, color: '#d97706' }} />, label: "This Month's Expenses", value: statsLoading ? '...' : formatCurrency(dashboardStats.expenses), trend: null },
+    { accent: netProfit >= 0 ? '#16a34a' : '#dc2626', bg: '#f0fdf4', iconBg: '#dcfce7', icon: <FaChartLine style={{ fontSize: 17, color: netProfit >= 0 ? '#16a34a' : '#dc2626' }} />, label: 'Net Profit', value: statsLoading ? '...' : formatCurrency(netProfit), trend: netProfit >= 0 ? 'up' : 'down' },
+    { accent: '#2563eb', bg: '#eff6ff', iconBg: '#dbeafe', icon: <FaSeedling style={{ fontSize: 17, color: '#2563eb' }} />, label: 'Budget Utilization', value: statsLoading ? '...' : (dashboardStats.budgetUtilizationPercent == null ? '—' : `${dashboardStats.budgetUtilizationPercent}%`), trend: null },
+    { accent: '#7c3aed', bg: '#faf5ff', iconBg: '#ede9fe', icon: <GiWheat style={{ fontSize: 17, color: '#7c3aed' }} />, label: dashboardStats.topCrop.name ? `Top Crop: ${dashboardStats.topCrop.name}` : 'Top Crop', value: statsLoading ? '...' : (dashboardStats.topCrop.percent == null ? '—' : `${dashboardStats.topCrop.percent}%`), trend: null },
+  ];
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
+  /* ── quick actions ─────────────────────────────────────── */
+  const quickActions = [
+    { icon: <FaPlus style={{ fontSize: 11 }} />, label: 'Add Expense', color: '#16a34a', bg: '#16a34a', textColor: '#fff', onClick: () => setShowExpenseModal(true) },
+    { icon: <FaPlus style={{ fontSize: 11 }} />, label: 'Add Income', color: '#d97706', bg: '#d97706', textColor: '#fff', onClick: () => setShowIncomeModal(true) },
+    { icon: <FaShoppingCart style={{ fontSize: 11 }} />, label: 'Marketplace', color: '#374151', bg: '#fff', textColor: '#374151', href: '/marketplace' },
+    { icon: <FaFileAlt style={{ fontSize: 11 }} />, label: 'My Orders', color: '#374151', bg: '#fff', textColor: '#374151', href: '/my-orders' },
+  ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fafafa', display: 'flex', flexDirection: 'column' }}>
-      {/* ===== HEADER ===== */}
-      <section style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '20px 24px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 44, height: 44, background: '#dcfce7', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FaUserCircle style={{ fontSize: 26, color: '#16a34a' }} />
-            </div>
-            <div>
-              <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0 }}>{greeting}, {userName}!</h1>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Here's your farm's financial health at a glance.</p>
-            </div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fef3c7', color: '#92400e', borderRadius: 9999, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>
-              <GiFarmTractor style={{ fontSize: 12 }} /> Farmer
-            </span>
-            <WeatherWidgetInline />
+    <div className="ab-dashboard-shell" style={{ fontFamily: "'Inter', sans-serif" }}>
+
+      {/* ── Mobile sidebar overlay ──────────────────────── */}
+      {sidebarOpen && <div className="ab-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+      {/* ════════════════════════════════════════════════════
+          SIDEBAR
+          ════════════════════════════════════════════════════ */}
+      <aside className={`ab-sidebar${sidebarOpen ? ' mobile-open' : ''}`}>
+        {/* Logo */}
+        <div className="ab-sidebar-logo">
+          <div className="ab-sidebar-logo-icon">
+            <FaLeaf style={{ color: '#fff', fontSize: 16 }} />
           </div>
-          <div style={{ fontStyle: 'italic', fontSize: 13, color: '#9ca3af', maxWidth: 320, textAlign: 'right' }}>"{quote}"</div>
+          <span className="ab-sidebar-logo-text">AgriBudget</span>
         </div>
-      </section>
 
-      {/* Welcome Banner */}
-      {localStorage.getItem('isFirstLogin') === 'true' && (
-        <div style={{ background: '#f0fdf4', borderBottom: '1px solid #bbf7d0', padding: '12px 24px' }} className="animate-slide-in-top">
-          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 16 }}>🎉</span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>Welcome to AgriBudget!</div>
-                <div style={{ fontSize: 12, color: '#16a34a' }}>Your account has been created successfully. Start managing your farm finances today!</div>
-              </div>
-            </div>
-            <button onClick={() => localStorage.setItem('isFirstLogin', 'false')} style={{ background: 'none', border: 'none', fontSize: 13, color: '#15803d', cursor: 'pointer', fontWeight: 500 }}>Dismiss</button>
-          </div>
-        </div>
-      )}
-
-      {/* Top-right nav buttons */}
-      <div style={{ position: 'fixed', top: 72, right: 20, zIndex: 50, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <button onClick={() => navigate('/')} title="Home" aria-label="Go to Home"
-          style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
-          onMouseEnter={e => e.currentTarget.style.background='#f9fafb'}
-          onMouseLeave={e => e.currentTarget.style.background='#fff'}>
-          <FaHome style={{ fontSize: 14 }} />
-        </button>
-        <button onClick={() => navigate('/settings')} title="Settings" aria-label="Open Settings"
-          style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
-          onMouseEnter={e => e.currentTarget.style.background='#f9fafb'}
-          onMouseLeave={e => e.currentTarget.style.background='#fff'}>
-          <FaCog style={{ fontSize: 14 }} />
-        </button>
-        <button onClick={handleLogout} title="Logout"
-          style={{ background: '#fff', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
-          onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
-          onMouseLeave={e => e.currentTarget.style.background='#fff'}>
-          <FaSignOutAlt style={{ fontSize: 14 }} />
-        </button>
-        <NotificationCenter userRole="farmer" userId={userEmail} userEmail={userEmail} />
-      </div>
-
-      {/* ===== STAT CARDS ===== */}
-      <section style={{ maxWidth: 1200, margin: '24px auto 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, padding: '0 24px' }}>
-        {[
-          { title: "This Month's Income", val: statsLoading ? '...' : statsCards[0]?.value, accent: '#16a34a', icon: <FaMoneyBillWave style={{ fontSize: 20, color: '#16a34a' }} /> },
-          { title: "This Month's Expenses", val: statsLoading ? '...' : statsCards[1]?.value, accent: '#d97706', icon: <FaChartPie style={{ fontSize: 20, color: '#d97706' }} /> },
-          { title: 'Budget Utilization', val: statsLoading ? '...' : statsCards[2]?.value, accent: '#2563eb', icon: <FaSeedling style={{ fontSize: 20, color: '#2563eb' }} /> },
-          { title: statsCards[3]?.title || 'Top Crop', val: statsLoading ? '...' : statsCards[3]?.value, accent: '#7c3aed', icon: <GiWheat style={{ fontSize: 20, color: '#7c3aed' }} /> },
-        ].map((s, i) => (
-          <div key={i} className="pro-stat-card" style={{ borderLeft: `4px solid ${s.accent}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{s.title}</span>
-              <div style={{ width: 34, height: 34, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{s.icon}</div>
-            </div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: '#111827' }}>{s.val}</div>
-          </div>
-        ))}
-      </section>
-
-      {/* ===== QUICK ACTIONS ===== */}
-      <section style={{ maxWidth: 1200, margin: '20px auto 0', padding: '0 24px' }}>
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 18px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: 4 }}>Quick Actions</span>
-          <button onClick={() => setShowExpenseModal(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#16a34a',color:'#fff',border:'none',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#15803d'} onMouseLeave={e=>e.currentTarget.style.background='#16a34a'}><FaPlus style={{fontSize:10}} /> Add Expense</button>
-          <button onClick={() => setShowIncomeModal(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#d97706',color:'#fff',border:'none',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#b45309'} onMouseLeave={e=>e.currentTarget.style.background='#d97706'}><FaPlus style={{fontSize:10}} /> Add Income</button>
-          <button onClick={() => setShowReports(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaFileAlt style={{fontSize:10}} /> Reports</button>
-          <a href="/marketplace" style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaShoppingCart style={{fontSize:10}} /> Marketplace</a>
-          <a href="/my-orders" style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaShoppingCart style={{fontSize:10}} /> My Orders</a>
-          <button onClick={() => setShowCropTracker(true)} title="Crop-wise Tracking" style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><GiWheat style={{fontSize:12}} /> Crop Tracker</button>
-          <button onClick={() => setShowCostAnalysis(true)} title="Crop-wise Cost Analysis" style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><GiWheat style={{fontSize:12}} /> Cost Analysis</button>
-          <button onClick={() => setShowIndividualTracker(true)} title="Individual Finance Tracker" style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaUsers style={{fontSize:10}} /> Finance Tracker</button>
-          <button onClick={() => setShowYieldPrediction(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaSeedling style={{fontSize:10}} /> Yield Prediction</button>
-          <button onClick={() => setShowCropRecommendation(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaSeedling style={{fontSize:10}} /> Crop Recommendation</button>
-          <button onClick={() => setShowAgriAI(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'linear-gradient(135deg,#15803d,#166534)',color:'#fff',border:'none',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }}><FaRobot style={{fontSize:11}} /> AgriAI</button>
-          <button onClick={() => setShowDiseaseDetection(true)} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#dc2626',border:'1px solid #fecaca',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:600,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#fef2f2'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}><FaBug style={{fontSize:11}} /> Disease Detect</button>
-          <button onClick={refreshAllData} style={{ display:'flex',alignItems:'center',gap:5,background:'#fff',color:'#374151',border:'1px solid #d1d5db',borderRadius:7,padding:'7px 14px',fontSize:13,fontWeight:500,cursor:'pointer' }} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}>&#8635; Refresh</button>
-        </div>
-      </section>
-
-      {/* ===== ADD EXPENSE MODAL ===== */}
-      {showExpenseModal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', backdropFilter:'blur(2px)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-          <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:14, boxShadow:'0 20px 60px rgba(0,0,0,0.15)', width:'100%', maxWidth:460, position:'relative' }}>
-            <button onClick={() => setShowExpenseModal(false)} aria-label="Close" style={{ position:'absolute', top:14, right:16, background:'none', border:'none', fontSize:22, color:'#9ca3af', cursor:'pointer' }}>&times;</button>
-            <div style={{ padding:'22px 28px 14px', borderBottom:'1px solid #f3f4f6' }}><h2 style={{ fontSize:17, fontWeight:700, color:'#111827' }}>Add Expense</h2></div>
-            <form onSubmit={handleExpenseSubmit} style={{ padding:'20px 28px 28px', display:'flex', flexDirection:'column', gap:14 }}>
-              {[{l:'Amount',n:'amount',t:'number',p:'Enter amount'},{l:'Category',n:'category',t:'text',p:'e.g. Fertilizer, Labor'},{l:'Date',n:'date',t:'date',p:''},{l:'Note',n:'note',t:'text',p:'Optional note'}].map(f=>(
-                <div key={f.n}>
-                  <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>{f.l}</label>
-                  <input type={f.t} name={f.n} value={expenseForm[f.n]} onChange={handleExpenseChange} placeholder={f.p} required={['amount','category'].includes(f.n)}
-                    style={{width:'100%',border:'1px solid #d1d5db',borderRadius:7,padding:'9px 12px',fontSize:14,color:'#111827',outline:'none',boxSizing:'border-box'}} />
-                </div>
-              ))}
-              <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>Crop (optional)</label>
-                <select name="crop" value={expenseForm.crop} onChange={handleExpenseChange}
-                  style={{width:'100%',border:'1px solid #d1d5db',borderRadius:7,padding:'9px 12px',fontSize:14,color:'#111827',outline:'none',boxSizing:'border-box'}}>
-                  <option value="">No crop (general expense)</option>
-                  {crops.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                </select>
-              </div>
-              <button type="submit" style={{ background:'#16a34a', color:'#fff', padding:'10px 0', borderRadius:8, border:'none', fontSize:14, fontWeight:700, cursor:'pointer' }}
-                onMouseEnter={e=>e.currentTarget.style.background='#15803d'} onMouseLeave={e=>e.currentTarget.style.background='#16a34a'}>Add Expense</button>
-              {expenseError && <div style={{color:'#dc2626',fontSize:13,fontWeight:600,textAlign:'center'}}>{expenseError}</div>}
-              {expenseMsg && <div style={{color:'#16a34a',fontSize:13,fontWeight:600,textAlign:'center'}}>{expenseMsg}</div>}
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ===== ADD INCOME MODAL ===== */}
-      {showIncomeModal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', backdropFilter:'blur(2px)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-          <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:14, boxShadow:'0 20px 60px rgba(0,0,0,0.15)', width:'100%', maxWidth:460, position:'relative' }}>
-            <button onClick={() => setShowIncomeModal(false)} aria-label="Close" style={{ position:'absolute', top:14, right:16, background:'none', border:'none', fontSize:22, color:'#9ca3af', cursor:'pointer' }}>&times;</button>
-            <div style={{ padding:'22px 28px 14px', borderBottom:'1px solid #f3f4f6' }}><h2 style={{ fontSize:17, fontWeight:700, color:'#111827' }}>Add Income</h2></div>
-            <form onSubmit={handleIncomeSubmit} style={{ padding:'20px 28px 28px', display:'flex', flexDirection:'column', gap:14 }}>
-              {[{l:'Amount',n:'amount',t:'number',p:'Enter amount'},{l:'Category',n:'category',t:'text',p:'e.g. Crop Sale, Subsidy'},{l:'Date',n:'date',t:'date',p:''},{l:'Note',n:'note',t:'text',p:'Optional note'}].map(f=>(
-                <div key={f.n}>
-                  <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>{f.l}</label>
-                  <input type={f.t} name={f.n} value={incomeForm[f.n]} onChange={handleIncomeChange} placeholder={f.p} required={['amount','category'].includes(f.n)}
-                    style={{width:'100%',border:'1px solid #d1d5db',borderRadius:7,padding:'9px 12px',fontSize:14,color:'#111827',outline:'none',boxSizing:'border-box'}} />
-                </div>
-              ))}
-              <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>Crop (optional)</label>
-                <select name="crop" value={incomeForm.crop} onChange={handleIncomeChange}
-                  style={{width:'100%',border:'1px solid #d1d5db',borderRadius:7,padding:'9px 12px',fontSize:14,color:'#111827',outline:'none',boxSizing:'border-box'}}>
-                  <option value="">No crop (general income)</option>
-                  {crops.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                </select>
-              </div>
-              <button type="submit" style={{ background:'#d97706', color:'#fff', padding:'10px 0', borderRadius:8, border:'none', fontSize:14, fontWeight:700, cursor:'pointer' }}
-                onMouseEnter={e=>e.currentTarget.style.background='#b45309'} onMouseLeave={e=>e.currentTarget.style.background='#d97706'}>Add Income</button>
-              {incomeError && <div style={{color:'#dc2626',fontSize:13,fontWeight:600,textAlign:'center'}}>{incomeError}</div>}
-              {incomeMsg && <div style={{color:'#16a34a',fontSize:13,fontWeight:600,textAlign:'center'}}>{incomeMsg}</div>}
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Floating action icon for Individual Finance Tracker */}
-      <button
-        className="fixed bottom-20 right-6 z-40 bg-[#2F855A] text-white p-4 rounded-full shadow-xl hover:bg-[#246a46] focus:ring-4 focus:ring-green-300"
-        title="Open Individual Finance Tracker"
-        onClick={() => setShowIndividualTracker(true)}
-      >
-        <FaUsers size={22} />
-      </button>
-
-      {/* Expense List */}
-      <section className="max-w-6xl mx-auto mb-10 px-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#2F855A] flex items-center"><FaChartPie className="mr-2 text-[#D69E2E]" /> Recent Expenses</h2>
-          {expenseList.length > 6 && (
+        {/* Nav */}
+        <nav className="ab-sidebar-nav">
+          {/* Main Section */}
+          <div className="ab-sidebar-section-label">Main</div>
+          {NAV_ITEMS.filter(i => i.section === 'main').map(item => (
             <button
-              className="text-sm text-[#2F855A] hover:text-[#D69E2E] font-semibold"
-              onClick={() => setShowAllExpenses(!showAllExpenses)}
+              key={item.key}
+              className={`ab-sidebar-item${activeView === item.key ? ' active' : ''}`}
+              onClick={() => handleNav(item.key)}
             >
-              {showAllExpenses ? 'Show Top 6' : 'View All'}
+              <span className="ab-sidebar-icon">{item.icon}</span>
+              <span className="ab-sidebar-label">{item.label}</span>
             </button>
-          )}
-        </div>
-        {expenseList.length === 0 ? (
-          <div className="text-gray-500 text-center">No expenses added yet.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-xl shadow">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 border-b">Amount</th>
-                  <th className="py-2 px-4 border-b">Category</th>
-                  <th className="py-2 px-4 border-b">Crop</th>
-                  <th className="py-2 px-4 border-b">Date</th>
-                  <th className="py-2 px-4 border-b">Note</th>
-                  <th className="py-2 px-4 border-b">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(showAllExpenses ? expenseList : expenseList.slice(0, 6)).map((exp, idx) => (
-                  <tr key={exp._id || idx} className="text-center">
-                    <td className="py-2 px-4 border-b font-semibold text-red-600">₹{exp.amount}</td>
-                    <td className="py-2 px-4 border-b">{exp.category}</td>
-                    <td className="py-2 px-4 border-b">{exp.crop || '—'}</td>
-                    <td className="py-2 px-4 border-b">{exp.date ? new Date(exp.date).toLocaleDateString() : ''}</td>
-                    <td className="py-2 px-4 border-b">{exp.note || '—'}</td>
-                    <td className="py-2 px-4 border-b">
-                      {exp._id && <button onClick={() => handleDeleteExpense(exp._id)} style={{background:'none',border:'none',cursor:'pointer',color:'#dc2626',fontSize:14}} title="Delete">🗑</button>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      {/* Income List */}
-      <section className="max-w-6xl mx-auto mb-10 px-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#2F855A] flex items-center"><FaMoneyBillWave className="mr-2 text-[#D69E2E]" /> Recent Incomes</h2>
-          {incomeList.length > 0 && (
-            <button
-              className="text-sm text-[#2F855A] hover:text-[#D69E2E] font-semibold"
-              onClick={() => setShowAllIncome(!showAllIncome)}
-            >
-              {showAllIncome ? 'Show Top 6' : 'View All'}
-            </button>
-          )}
-        </div>
-        {incomeList.length === 0 ? (
-          <div className="text-gray-500 text-center">No incomes added yet.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-xl shadow">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 border-b">Amount</th>
-                  <th className="py-2 px-4 border-b">Category</th>
-                  <th className="py-2 px-4 border-b">Crop</th>
-                  <th className="py-2 px-4 border-b">Date</th>
-                  <th className="py-2 px-4 border-b">Note</th>
-                  <th className="py-2 px-4 border-b">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(showAllIncome ? incomeList : incomeList.slice(0, 6)).map((inc, idx) => (
-                  <tr key={inc._id || idx} className="text-center">
-                    <td className="py-2 px-4 border-b font-semibold text-green-600">₹{inc.amount}</td>
-                    <td className="py-2 px-4 border-b">{inc.category}</td>
-                    <td className="py-2 px-4 border-b">{inc.crop || '—'}</td>
-                    <td className="py-2 px-4 border-b">{inc.date ? new Date(inc.date).toLocaleDateString() : ''}</td>
-                    <td className="py-2 px-4 border-b">{inc.note || '—'}</td>
-                    <td className="py-2 px-4 border-b">
-                      {inc._id && <button onClick={() => handleDeleteIncome(inc._id)} style={{background:'none',border:'none',cursor:'pointer',color:'#dc2626',fontSize:14}} title="Delete">🗑</button>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      {/* Analytics Placeholders */}
-      <section className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 px-4 pb-16">
-        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center justify-center min-h-[220px]">
-          <h2 className="text-xl font-bold text-[#2F855A] mb-4 flex items-center"><FaMoneyBillWave className="mr-2 text-[#D69E2E]" /> Income Trend</h2>
-          {incomeList.length > 0 ? (
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                ₹{incomeList.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-600">Total Income</div>
-              <div className="text-xs text-gray-500 mt-1">{incomeList.length} transactions</div>
-            </div>
-          ) : (
-            <div className="h-32 w-full bg-gradient-to-r from-[#2F855A]/10 to-[#D69E2E]/10 rounded-lg flex items-center justify-center text-gray-400">
-              <span>No income data yet</span>
-            </div>
-          )}
-        </div>
-        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center justify-center min-h-[220px]">
-          <h2 className="text-xl font-bold text-[#2F855A] mb-4 flex items-center"><FaChartPie className="mr-2 text-[#D69E2E]" /> Expense Breakdown</h2>
-          {expenseList.length > 0 ? (
-            <div className="text-center">
-              <div className="text-3xl font-bold text-yellow-600 mb-2">
-                ₹{expenseList.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-600">Total Expenses</div>
-              <div className="text-xs text-gray-500 mt-1">{expenseList.length} transactions</div>
-            </div>
-          ) : (
-            <div className="h-32 w-full bg-gradient-to-r from-[#D69E2E]/10 to-[#2F855A]/10 rounded-lg flex items-center justify-center text-gray-400">
-              <span>No expense data yet</span>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow p-6">
-        <h4 className="font-bold text-gray-800 mb-3">Transactions</h4>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Date</th>
-                <th className="text-left py-2">Type</th>
-                <th className="text-left py-2">Amount</th>
-                <th className="text-left py-2">Category</th>
-                <th className="text-left py-2">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {incomeList.length === 0 && expenseList.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="py-8 text-center text-gray-500">
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                        <span className="text-2xl">📊</span>
-                      </div>
-                      <p className="text-sm font-medium">No transactions yet</p>
-                      <p className="text-xs text-gray-400">Start by adding your first income or expense</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                <>
-                  {/* Income Transactions */}
-                  {incomeList.map((income, index) => (
-                    <tr key={`income-${index}`} className="border-b hover:bg-gray-50">
-                      <td className="py-2">{new Date(income.date).toLocaleDateString()}</td>
-                      <td className="py-2">
-                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Income</span>
-                      </td>
-                      <td className="py-2 font-semibold">₹{income.amount.toLocaleString()}</td>
-                      <td className="py-2">{income.category}</td>
-                      <td className="py-2">{income.note || '-'}</td>
-                    </tr>
-                  ))}
-                  {/* Expense Transactions */}
-                  {expenseList.map((expense, index) => (
-                    <tr key={`expense-${index}`} className="border-b hover:bg-gray-50">
-                      <td className="py-2">{new Date(expense.date).toLocaleDateString()}</td>
-                      <td className="py-2">
-                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">Expense</span>
-                      </td>
-                      <td className="py-2 font-semibold">₹{expense.amount.toLocaleString()}</td>
-                      <td className="py-2">{expense.category}</td>
-                      <td className="py-2">{expense.note || '-'}</td>
-                    </tr>
-                  ))}
-                </>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ===== FOOTER ===== */}
-      <footer style={{ background: '#111827', color: '#9ca3af', padding: '16px 24px', marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ display: 'flex', gap: 20 }}>
-          {['Privacy','Help','Feedback'].map(l => (
-            <a key={l} href={`#${l.toLowerCase()}`} style={{ color: '#9ca3af', textDecoration: 'none', fontSize: 13 }} onMouseEnter={e => e.target.style.color='#e5e7eb'} onMouseLeave={e => e.target.style.color='#9ca3af'}>{l}</a>
           ))}
+
+          {/* AI Section */}
+          <div className="ab-sidebar-section-label" style={{ marginTop: 8 }}>AI & ML Tools</div>
+          {NAV_ITEMS.filter(i => i.section === 'ai').map(item => (
+            <button
+              key={item.key}
+              className={`ab-sidebar-item${activeView === item.key ? ' active' : ''}`}
+              onClick={() => handleNav(item.key)}
+              style={item.key === 'agriAI' ? { color: '#7c3aed' } : {}}
+            >
+              <span className="ab-sidebar-icon">{item.icon}</span>
+              <span className="ab-sidebar-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Sidebar footer */}
+        <div className="ab-sidebar-footer">
+          <button className="ab-sidebar-item" onClick={() => navigate('/marketplace')} style={{ color: '#2563eb' }}>
+            <span className="ab-sidebar-icon"><FaShoppingCart /></span>
+            <span className="ab-sidebar-label">Marketplace</span>
+          </button>
+          <button className="ab-sidebar-item" onClick={() => navigate('/settings')}>
+            <span className="ab-sidebar-icon"><FaCog /></span>
+            <span className="ab-sidebar-label">Settings</span>
+          </button>
+          <button className="ab-sidebar-item" onClick={handleLogout} style={{ color: '#dc2626' }}>
+            <span className="ab-sidebar-icon"><FaSignOutAlt /></span>
+            <span className="ab-sidebar-label">Sign Out</span>
+          </button>
         </div>
-        <div style={{ fontSize: 12 }}>&copy; {new Date().getFullYear()} AgriBudget. Empowering Farmers.</div>
-      </footer>
+      </aside>
+
+      {/* ════════════════════════════════════════════════════
+          MAIN AREA
+          ════════════════════════════════════════════════════ */}
+      <div className="ab-main">
+
+        {/* ── Header bar ─────────────────────────────────── */}
+        <header className="ab-main-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* Mobile hamburger */}
+            <button
+              className="md:hidden"
+              onClick={() => setSidebarOpen(true)}
+              style={{ background: 'none', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center' }}
+              aria-label="Open sidebar"
+            >
+              <FaBars size={17} />
+            </button>
+
+            <div>
+              <h1 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2 }}>
+                {greetingEmoji} {greeting}, {userName?.split(' ')[0]}!
+              </h1>
+              <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, marginTop: 2 }}>
+                Here's your farm's financial health at a glance.
+              </p>
+            </div>
+
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#fef3c7', color: '#92400e', borderRadius: 9999, padding: '3px 10px', fontSize: 11.5, fontWeight: 600, flexShrink: 0 }}>
+              <GiFarmTractor style={{ fontSize: 11 }} /> Farmer
+            </span>
+          </div>
+
+          {/* Header right */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <WeatherWidgetInline />
+            <button
+              onClick={refreshAllData}
+              title="Refresh data"
+              style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={e => e.currentTarget.style.background = '#f9fafb'}
+            >
+              <FaSync style={{ fontSize: 13 }} />
+            </button>
+            <NotificationCenter userRole="farmer" userId={userEmail} userEmail={userEmail} />
+            <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg,#16a34a,#15803d)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title={userEmail}>
+              <FaUserCircle style={{ color: '#fff', fontSize: 18 }} />
+            </div>
+          </div>
+        </header>
+
+        {/* ── First-login welcome banner ──────────────────── */}
+        {localStorage.getItem('isFirstLogin') === 'true' && (
+          <div style={{ background: '#f0fdf4', borderBottom: '1px solid #bbf7d0', padding: '10px 28px' }} className="animate-slide-in-top">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#15803d' }}>
+                🎉 <strong>Welcome to AgriBudget!</strong> Your account has been created successfully.
+              </div>
+              <button onClick={() => localStorage.setItem('isFirstLogin', 'false')} style={{ background: 'none', border: 'none', fontSize: 12, color: '#16a34a', cursor: 'pointer', fontWeight: 500 }}>Dismiss</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Main body ───────────────────────────────────── */}
+        <main className="ab-main-body">
+
+          {/* ══ KPI CARDS ═══════════════════════════════════ */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 24 }}>
+            {kpiCards.map((card, i) => (
+              <div key={i} className="pro-stat-card" style={{
+                borderLeft: `4px solid ${card.accent}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <span className="pro-stat-label">{card.label}</span>
+                  <div style={{ width: 34, height: 34, background: card.iconBg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {card.icon}
+                  </div>
+                </div>
+                <div className="pro-stat-value">{card.value}</div>
+                {card.trend && (
+                  <div className={`pro-stat-trend ${card.trend}`}>
+                    {card.trend === 'up' ? <FaArrowUp style={{ fontSize: 10 }} /> : <FaArrowDown style={{ fontSize: 10 }} />}
+                    {card.trend === 'up' ? 'Positive' : 'Negative'}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* ══ QUICK ACTIONS ═══════════════════════════════ */}
+          <div className="pro-card" style={{ padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: 4, whiteSpace: 'nowrap' }}>Quick Actions</span>
+            {quickActions.map((a, i) => (
+              a.href ? (
+                <a key={i} href={a.href}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: a.bg, color: a.textColor, border: a.bg === '#fff' ? '1px solid #e5e7eb' : 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600, textDecoration: 'none', transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = a.bg === '#fff' ? '#f9fafb' : a.color === '#16a34a' ? '#15803d' : '#b45309'}
+                  onMouseLeave={e => e.currentTarget.style.background = a.bg}
+                >
+                  {a.icon} {a.label}
+                </a>
+              ) : (
+                <button key={i} onClick={a.onClick}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: a.bg, color: a.textColor, border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s', fontFamily: 'inherit' }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                >
+                  {a.icon} {a.label}
+                </button>
+              )
+            ))}
+            <button onClick={refreshAllData} style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#fff', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', marginLeft: 'auto', fontFamily: 'inherit' }}>
+              <FaSync style={{ fontSize: 10 }} /> Refresh
+            </button>
+          </div>
+
+          {/* ══ FINANCE TABLES ══════════════════════════════ */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: 20, marginBottom: 24 }}>
+
+            {/* Recent Expenses */}
+            <div className="pro-card">
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 28, height: 28, background: '#fef3c7', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FaChartPie style={{ fontSize: 13, color: '#d97706' }} />
+                  </div>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Recent Expenses</h3>
+                  {expenseList.length > 0 && <span className="pro-badge pro-badge-amber">{expenseList.length}</span>}
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {expenseList.length > 6 && (
+                    <button onClick={() => setShowAllExpenses(!showAllExpenses)}
+                      style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {showAllExpenses ? 'Show Less' : 'View All'}
+                    </button>
+                  )}
+                  <button onClick={() => setShowExpenseModal(true)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <FaPlus style={{ fontSize: 9 }} /> Add
+                  </button>
+                </div>
+              </div>
+
+              {expenseList.length === 0 ? (
+                <div className="pro-empty-state" style={{ padding: '32px 24px' }}>
+                  <div className="pro-empty-icon" style={{ fontSize: 20 }}>💸</div>
+                  <div className="pro-empty-title">No expenses yet</div>
+                  <div className="pro-empty-desc">Track your farming expenses to monitor where your money goes.</div>
+                  <button className="pro-btn pro-btn-primary pro-btn-sm" onClick={() => setShowExpenseModal(true)}>
+                    <FaPlus style={{ fontSize: 10 }} /> Add First Expense
+                  </button>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="pro-table">
+                    <thead>
+                      <tr>
+                        <th>Amount</th><th>Category</th><th>Crop</th><th>Date</th><th>Note</th><th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(showAllExpenses ? expenseList : expenseList.slice(0, 6)).map((exp, idx) => (
+                        <tr key={exp._id || idx}>
+                          <td><span style={{ fontWeight: 700, color: '#dc2626' }}>₹{Number(exp.amount).toLocaleString('en-IN')}</span></td>
+                          <td><span className="pro-badge pro-badge-amber" style={{ fontSize: 11 }}>{exp.category}</span></td>
+                          <td style={{ color: '#6b7280', fontSize: 12.5 }}>{exp.crop || '—'}</td>
+                          <td style={{ color: '#6b7280', fontSize: 12.5 }}>{exp.date ? new Date(exp.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</td>
+                          <td style={{ color: '#9ca3af', fontSize: 12 }}>{exp.note || '—'}</td>
+                          <td>
+                            {exp._id && (
+                              <button onClick={() => handleDeleteExpense(exp._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4, borderRadius: 4, transition: 'color 0.15s' }}
+                                onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
+                                onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+                                title="Delete expense">
+                                <FaTrash style={{ fontSize: 12 }} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Income */}
+            <div className="pro-card">
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 28, height: 28, background: '#dcfce7', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FaMoneyBillWave style={{ fontSize: 13, color: '#16a34a' }} />
+                  </div>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Recent Income</h3>
+                  {incomeList.length > 0 && <span className="pro-badge pro-badge-green">{incomeList.length}</span>}
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {incomeList.length > 6 && (
+                    <button onClick={() => setShowAllIncome(!showAllIncome)}
+                      style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {showAllIncome ? 'Show Less' : 'View All'}
+                    </button>
+                  )}
+                  <button onClick={() => setShowIncomeModal(true)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#d97706', color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <FaPlus style={{ fontSize: 9 }} /> Add
+                  </button>
+                </div>
+              </div>
+
+              {incomeList.length === 0 ? (
+                <div className="pro-empty-state" style={{ padding: '32px 24px' }}>
+                  <div className="pro-empty-icon" style={{ fontSize: 20 }}>💰</div>
+                  <div className="pro-empty-title">No income recorded</div>
+                  <div className="pro-empty-desc">Add your income from crop sales, subsidies, and other farm activities.</div>
+                  <button className="pro-btn pro-btn-primary pro-btn-sm" onClick={() => setShowIncomeModal(true)}>
+                    <FaPlus style={{ fontSize: 10 }} /> Add First Income
+                  </button>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="pro-table">
+                    <thead>
+                      <tr>
+                        <th>Amount</th><th>Category</th><th>Crop</th><th>Date</th><th>Note</th><th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(showAllIncome ? incomeList : incomeList.slice(0, 6)).map((inc, idx) => (
+                        <tr key={inc._id || idx}>
+                          <td><span style={{ fontWeight: 700, color: '#16a34a' }}>₹{Number(inc.amount).toLocaleString('en-IN')}</span></td>
+                          <td><span className="pro-badge pro-badge-green" style={{ fontSize: 11 }}>{inc.category}</span></td>
+                          <td style={{ color: '#6b7280', fontSize: 12.5 }}>{inc.crop || '—'}</td>
+                          <td style={{ color: '#6b7280', fontSize: 12.5 }}>{inc.date ? new Date(inc.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</td>
+                          <td style={{ color: '#9ca3af', fontSize: 12 }}>{inc.note || '—'}</td>
+                          <td>
+                            {inc._id && (
+                              <button onClick={() => handleDeleteIncome(inc._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4, borderRadius: 4, transition: 'color 0.15s' }}
+                                onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
+                                onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+                                title="Delete income">
+                                <FaTrash style={{ fontSize: 12 }} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ══ SUMMARY / ANALYTICS ROW ═════════════════════ */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+            {/* Income Summary */}
+            <div className="pro-card" style={{ padding: '20px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <FaMoneyBillWave style={{ color: '#16a34a', fontSize: 15 }} />
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Income Overview</span>
+              </div>
+              {incomeList.length > 0 ? (
+                <div>
+                  <div style={{ fontSize: 32, fontWeight: 800, color: '#16a34a', letterSpacing: '-0.5px', marginBottom: 4 }}>
+                    ₹{incomeList.reduce((s, i) => s + Number(i.amount), 0).toLocaleString('en-IN')}
+                  </div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>Total from {incomeList.length} transactions</div>
+                  <div style={{ marginTop: 14, height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: 6, width: '72%', background: '#16a34a', borderRadius: 99 }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
+                    <span>Budget progress</span><span>72%</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '16px 0', color: '#9ca3af', fontSize: 13 }}>No income data yet</div>
+              )}
+            </div>
+
+            {/* Expense Summary */}
+            <div className="pro-card" style={{ padding: '20px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <FaChartPie style={{ color: '#d97706', fontSize: 15 }} />
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Expense Overview</span>
+              </div>
+              {expenseList.length > 0 ? (
+                <div>
+                  <div style={{ fontSize: 32, fontWeight: 800, color: '#d97706', letterSpacing: '-0.5px', marginBottom: 4 }}>
+                    ₹{expenseList.reduce((s, e) => s + Number(e.amount), 0).toLocaleString('en-IN')}
+                  </div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>Total from {expenseList.length} transactions</div>
+                  <div style={{ marginTop: 14, height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: 6, width: '48%', background: '#d97706', borderRadius: 99 }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
+                    <span>Of income</span><span>48%</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '16px 0', color: '#9ca3af', fontSize: 13 }}>No expense data yet</div>
+              )}
+            </div>
+
+            {/* AI Tip / Notification */}
+            <div className="pro-card" style={{ padding: '20px 22px', background: 'linear-gradient(135deg,#faf5ff,#ede9fe)', border: '1px solid #ddd6fe' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <div style={{ width: 30, height: 30, background: '#7c3aed', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FaRobot style={{ color: '#fff', fontSize: 14 }} />
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#4c1d95' }}>AgriAI Insight</span>
+                <span className="pro-badge pro-badge-purple" style={{ fontSize: 10, marginLeft: 'auto' }}>AI</span>
+              </div>
+              <p style={{ fontSize: 13, color: '#5b21b6', lineHeight: 1.65, marginBottom: 14 }}>
+                Your farm finances are being tracked. Use AgriAI to get personalised advice on crop selection, expense reduction, and market timing.
+              </p>
+              <button onClick={() => setShowAgriAI(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <FaRobot style={{ fontSize: 11 }} /> Ask AgriAI
+              </button>
+            </div>
+          </div>
+
+        </main>
+
+        {/* ── Footer ─────────────────────────────────────── */}
+        <footer style={{ background: '#111827', color: '#6b7280', padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 18 }}>
+            {['Privacy', 'Help', 'Feedback'].map(l => (
+              <a key={l} href={`#${l.toLowerCase()}`} style={{ color: '#6b7280', textDecoration: 'none', fontSize: 12.5, transition: 'color 0.15s' }}
+                onMouseEnter={e => e.target.style.color = '#e2e8f0'}
+                onMouseLeave={e => e.target.style.color = '#6b7280'}>{l}</a>
+            ))}
+          </div>
+          <div style={{ fontSize: 12 }}>© {new Date().getFullYear()} AgriBudget — Empowering Farmers</div>
+        </footer>
+      </div>
+
+      {/* ════════════════════════════════════════════════════
+          MODALS (business logic untouched)
+          ════════════════════════════════════════════════════ */}
+
+      {/* Add Expense Modal */}
+      {showExpenseModal && (
+        <div className="pro-modal-overlay">
+          <div className="pro-modal animate-fade-in-scale">
+            <div className="pro-modal-header">
+              <div>
+                <h2 className="pro-modal-title">💸 Add Expense</h2>
+                <p style={{ fontSize: 12.5, color: '#9ca3af', marginTop: 3 }}>Record a farm expense</p>
+              </div>
+              <button className="pro-modal-close" onClick={() => setShowExpenseModal(false)} aria-label="Close">×</button>
+            </div>
+            <form onSubmit={handleExpenseSubmit}>
+              <div className="pro-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {[{ l: 'Amount (₹)', n: 'amount', t: 'number', p: '0' }, { l: 'Category', n: 'category', t: 'text', p: 'e.g. Fertilizer, Labour' }, { l: 'Date', n: 'date', t: 'date', p: '' }, { l: 'Note (optional)', n: 'note', t: 'text', p: 'Brief description' }].map(f => (
+                  <div key={f.n}>
+                    <label style={labelStyle}>{f.l}</label>
+                    <input type={f.t} name={f.n} value={expenseForm[f.n]} onChange={handleExpenseChange} placeholder={f.p} required={['amount', 'category'].includes(f.n)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+                  </div>
+                ))}
+                <div>
+                  <label style={labelStyle}>Crop (optional)</label>
+                  <select name="crop" value={expenseForm.crop} onChange={handleExpenseChange} style={inputStyle} onFocus={focusIn} onBlur={focusOut}>
+                    <option value="">No crop (general expense)</option>
+                    {crops.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </div>
+                {expenseError && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>⚠️ {expenseError}</div>}
+                {expenseMsg && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>✓ {expenseMsg}</div>}
+              </div>
+              <div className="pro-modal-footer">
+                <button type="button" className="pro-btn pro-btn-secondary" onClick={() => setShowExpenseModal(false)}>Cancel</button>
+                <button type="submit" className="pro-btn pro-btn-primary"><FaPlus style={{ fontSize: 10 }} /> Add Expense</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Income Modal */}
+      {showIncomeModal && (
+        <div className="pro-modal-overlay">
+          <div className="pro-modal animate-fade-in-scale">
+            <div className="pro-modal-header">
+              <div>
+                <h2 className="pro-modal-title">💰 Add Income</h2>
+                <p style={{ fontSize: 12.5, color: '#9ca3af', marginTop: 3 }}>Record a farm income</p>
+              </div>
+              <button className="pro-modal-close" onClick={() => setShowIncomeModal(false)} aria-label="Close">×</button>
+            </div>
+            <form onSubmit={handleIncomeSubmit}>
+              <div className="pro-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {[{ l: 'Amount (₹)', n: 'amount', t: 'number', p: '0' }, { l: 'Category', n: 'category', t: 'text', p: 'e.g. Crop Sale, Subsidy' }, { l: 'Date', n: 'date', t: 'date', p: '' }, { l: 'Note (optional)', n: 'note', t: 'text', p: 'Brief description' }].map(f => (
+                  <div key={f.n}>
+                    <label style={labelStyle}>{f.l}</label>
+                    <input type={f.t} name={f.n} value={incomeForm[f.n]} onChange={handleIncomeChange} placeholder={f.p} required={['amount', 'category'].includes(f.n)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+                  </div>
+                ))}
+                <div>
+                  <label style={labelStyle}>Crop (optional)</label>
+                  <select name="crop" value={incomeForm.crop} onChange={handleIncomeChange} style={inputStyle} onFocus={focusIn} onBlur={focusOut}>
+                    <option value="">No crop (general income)</option>
+                    {crops.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </div>
+                {incomeError && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>⚠️ {incomeError}</div>}
+                {incomeMsg && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>✓ {incomeMsg}</div>}
+              </div>
+              <div className="pro-modal-footer">
+                <button type="button" className="pro-btn pro-btn-secondary" onClick={() => setShowIncomeModal(false)}>Cancel</button>
+                <button type="submit" className="pro-btn" style={{ background: '#d97706', color: '#fff' }}><FaPlus style={{ fontSize: 10 }} /> Add Income</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Reports Modal */}
-      {showReports && (
-        <Reports onClose={() => setShowReports(false)} />
-      )}
+      {showReports && <Reports onClose={() => { setShowReports(false); setActiveView('overview'); }} />}
+
       {/* Crop Tracker Modal */}
       {showCropTracker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-5xl max-h-[90vh] overflow-y-auto relative">
-            <button
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl"
-              onClick={() => setShowCropTracker(false)}
-              aria-label="Close"
-            >
-              &times;
-            </button>
+        <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowCropTracker(false); setActiveView('overview'); } }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 4, width: '100%', maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
+            <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowCropTracker(false); setActiveView('overview'); }} aria-label="Close">×</button>
             <CropTracker />
           </div>
         </div>
       )}
+
       {/* Cost Analysis Modal */}
       {showCostAnalysis && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-7xl max-h-[90vh] overflow-y-auto relative">
-            <button
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl"
-              onClick={() => setShowCostAnalysis(false)}
-              aria-label="Close"
-            >
-              &times;
-            </button>
+        <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowCostAnalysis(false); setActiveView('overview'); } }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 4, width: '100%', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
+            <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowCostAnalysis(false); setActiveView('overview'); }} aria-label="Close">×</button>
             <CostAnalysis />
           </div>
         </div>
       )}
+
       {/* Individual Finance Tracker Modal */}
       {showIndividualTracker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
-            <button
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl"
-              onClick={() => setShowIndividualTracker(false)}
-              aria-label="Close"
-            >
-              &times;
-            </button>
+        <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowIndividualTracker(false); setActiveView('overview'); } }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 4, width: '100%', maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
+            <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowIndividualTracker(false); setActiveView('overview'); }} aria-label="Close">×</button>
             <IndividualFinanceTracker />
           </div>
         </div>
       )}
 
-      {/* Crop Yield Prediction Modal */}
+      {/* Yield Prediction Modal */}
       {showYieldPrediction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-xl max-h-[90vh] overflow-y-auto relative">
-            <button
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl"
-              onClick={() => setShowYieldPrediction(false)}
-              aria-label="Close"
-            >
-              &times;
-            </button>
-            {/* CropYieldPrediction component */}
+        <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowYieldPrediction(false); setActiveView('overview'); } }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 4, width: '100%', maxWidth: 580, maxHeight: '90vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
+            <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowYieldPrediction(false); setActiveView('overview'); }} aria-label="Close">×</button>
             {React.createElement(require('./CropYieldPrediction').default)}
           </div>
         </div>
@@ -817,16 +761,9 @@ const FarmerDashboard = () => {
 
       {/* Crop Recommendation Modal */}
       {showCropRecommendation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-xl max-h-[90vh] overflow-y-auto relative">
-            <button
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl"
-              onClick={() => setShowCropRecommendation(false)}
-              aria-label="Close"
-            >
-              &times;
-            </button>
-            {/* CropRecommendation component */}
+        <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowCropRecommendation(false); setActiveView('overview'); } }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 4, width: '100%', maxWidth: 640, maxHeight: '90vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
+            <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowCropRecommendation(false); setActiveView('overview'); }} aria-label="Close">×</button>
             {React.createElement(require('./CropRecommendation').default, { userEmail })}
           </div>
         </div>
@@ -834,9 +771,9 @@ const FarmerDashboard = () => {
 
       {/* AgriAI Modal */}
       {showAgriAI && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-2xl max-h-[92vh] overflow-y-auto relative">
-            <button className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowAgriAI(false)} aria-label="Close">&times;</button>
+        <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowAgriAI(false); setActiveView('overview'); } }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '16px', width: '100%', maxWidth: 680, maxHeight: '92vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
+            <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowAgriAI(false); setActiveView('overview'); }} aria-label="Close">×</button>
             <AgriAI userEmail={userEmail} userLocation={localStorage.getItem('userLocation') || ''} />
           </div>
         </div>
@@ -844,58 +781,38 @@ const FarmerDashboard = () => {
 
       {/* Disease Detection Modal */}
       {showDiseaseDetection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-3xl max-h-[92vh] overflow-y-auto relative">
-            <button className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowDiseaseDetection(false)} aria-label="Close">&times;</button>
+        <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowDiseaseDetection(false); setActiveView('overview'); } }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '16px', width: '100%', maxWidth: 780, maxHeight: '92vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
+            <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowDiseaseDetection(false); setActiveView('overview'); }} aria-label="Close">×</button>
             <DiseaseDetection userEmail={userEmail} />
           </div>
         </div>
       )}
 
-      {/* Profile Update Prompt Modal */}
+      {/* Profile Prompt Modal */}
       {showProfilePrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative animate-bounce-in">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                <FaUserCircle className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Welcome to AgriBudget!</h3>
-              <p className="text-gray-600 mb-6">
-                To provide you with the best experience, please update your profile information including:
+        <div className="pro-modal-overlay">
+          <div className="pro-modal animate-bounce-in">
+            <div className="pro-modal-header">
+              <h3 className="pro-modal-title">🌱 Welcome to AgriBudget!</h3>
+              <button className="pro-modal-close" onClick={() => setShowProfilePrompt(false)} aria-label="Close">×</button>
+            </div>
+            <div className="pro-modal-body">
+              <p style={{ fontSize: 13.5, color: '#6b7280', marginBottom: 18, lineHeight: 1.65 }}>
+                To provide the best experience, we recommend updating your profile with:
               </p>
-              <div className="text-left space-y-2 mb-6">
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                  Contact details and location
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                  Farm size and crop preferences
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                  Financial goals and budget settings
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
+                {['Contact details and location', 'Farm size and crop preferences', 'Financial goals and budget settings'].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, color: '#374151' }}>
+                    <span style={{ width: 8, height: 8, background: '#16a34a', borderRadius: '50%', flexShrink: 0 }} />
+                    {item}
+                  </div>
+                ))}
               </div>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowProfilePrompt(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-400 transition-colors"
-                >
-                  Maybe Later
-                </button>
-                <button
-                  onClick={() => {
-                    setShowProfilePrompt(false);
-                    // You can add navigation to a profile settings page here
-                    // navigate('/profile-settings');
-                  }}
-                  className="flex-1 bg-[#2F855A] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#1F5F3F] transition-colors"
-                >
-                  Update Profile
-                </button>
-              </div>
+            </div>
+            <div className="pro-modal-footer">
+              <button className="pro-btn pro-btn-secondary" onClick={() => setShowProfilePrompt(false)}>Maybe Later</button>
+              <button className="pro-btn pro-btn-primary" onClick={() => { setShowProfilePrompt(false); navigate('/settings'); }}>Update Profile</button>
             </div>
           </div>
         </div>
@@ -904,4 +821,4 @@ const FarmerDashboard = () => {
   );
 };
 
-export default FarmerDashboard; 
+export default FarmerDashboard;

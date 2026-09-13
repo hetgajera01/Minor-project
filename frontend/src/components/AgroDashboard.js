@@ -482,40 +482,48 @@ const AgroDashboard = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fafafa', display: 'flex' }}>
+    <div className="ab-dashboard-shell" style={{ fontFamily: "'Inter', sans-serif" }}>
       <Toast msg={toast.msg} type={toast.type} onClose={() => setToast({ msg: '', type: 'success' })} />
+
+      {/* Mobile overlay */}
+      {sidebarOpen && <div className="ab-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
       {/* Sidebar */}
-      <aside style={{ width: 220, background: '#fff', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }} className={`${sidebarOpen ? '' : 'hidden'} md:flex`}>
-        <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #f3f4f6', gap: 8 }}>
-          <FaBuilding style={{ color: '#16a34a', fontSize: 14 }} />
-          <span style={{ fontWeight: 700, fontSize: 13, color: '#111827' }}>Agro Business</span>
+      <aside className={`ab-sidebar${sidebarOpen ? ' mobile-open' : ''}`}>
+        <div className="ab-sidebar-logo">
+          <div className="ab-sidebar-logo-icon">
+            <FaBuilding style={{ color: '#fff', fontSize: 16 }} />
+          </div>
+          <span className="ab-sidebar-logo-text">AgriBudget</span>
         </div>
-        <nav style={{ padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <nav className="ab-sidebar-nav">
+          <div className="ab-sidebar-section-label">Business</div>
           {[
-            { icon: <FaChartLine style={{ fontSize: 13 }} />, label: 'Dashboard', tab: 'dashboard' },
-            { icon: <FaBoxOpen style={{ fontSize: 13 }} />, label: 'My Products', tab: 'products' },
-            { icon: <FaShoppingCart style={{ fontSize: 13 }} />, label: 'Orders', tab: 'orders' },
-            { icon: <FaEnvelope style={{ fontSize: 13 }} />, label: 'Requests', tab: 'requests' },
-            { icon: <FaChartBar style={{ fontSize: 13 }} />, label: 'Analytics', tab: 'analytics' },
-            { icon: <FaBell style={{ fontSize: 13 }} />, label: 'Notifications', tab: 'notifications' },
-            { icon: <FaCog style={{ fontSize: 13 }} />, label: 'Settings', tab: 'settings' },
+            { icon: <FaChartLine />, label: 'Dashboard',      tab: 'dashboard' },
+            { icon: <FaBoxOpen />,   label: 'My Products',    tab: 'products' },
+            { icon: <FaShoppingCart />, label: 'Orders',      tab: 'orders' },
+            { icon: <FaEnvelope />,  label: 'Requests',       tab: 'requests' },
+            { icon: <FaChartBar />,  label: 'Analytics',      tab: 'analytics' },
+            { icon: <FaBell />,      label: 'Notifications',  tab: 'notifications' },
           ].map((item, idx) => (
             <button
               key={idx}
-              onClick={() => setActiveTab(item.tab)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
-                borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: activeTab === item.tab ? 700 : 500,
-                background: activeTab === item.tab ? '#f0fdf4' : 'transparent',
-                color: activeTab === item.tab ? '#16a34a' : '#374151',
-                textAlign: 'left', width: '100%',
-              }}
+              className={`ab-sidebar-item${activeTab === item.tab ? ' active' : ''}`}
+              onClick={() => { setActiveTab(item.tab); setSidebarOpen(false); }}
             >
-              {item.icon} {item.label}
+              <span className="ab-sidebar-icon">{item.icon}</span>
+              <span className="ab-sidebar-label">{item.label}</span>
             </button>
           ))}
-          <hr style={{ borderColor: '#f3f4f6', margin: '8px 4px' }} />
+        </nav>
+        <div className="ab-sidebar-footer">
+          <button className="ab-sidebar-item" onClick={() => navigate('/settings')}>
+            <span className="ab-sidebar-icon"><FaCog /></span>
+            <span className="ab-sidebar-label">Settings</span>
+          </button>
           <button
+            className="ab-sidebar-item"
+            style={{ color: '#dc2626' }}
             onClick={() => {
               localStorage.removeItem('agroName');
               localStorage.removeItem('agroEmail');
@@ -523,50 +531,63 @@ const AgroDashboard = () => {
               localStorage.removeItem('role');
               navigate('/login');
             }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
-              borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-              background: 'transparent', color: '#dc2626', textAlign: 'left', width: '100%',
-            }}
           >
-            <FaSignOutAlt style={{ fontSize: 13 }} /> Logout
+            <span className="ab-sidebar-icon"><FaSignOutAlt /></span>
+            <span className="ab-sidebar-label">Sign Out</span>
           </button>
-        </nav>
+        </div>
       </aside>
 
       {/* Main */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* Topbar */}
-        <header style={{ position: 'sticky', top: 0, zIndex: 30, background: '#fff', borderBottom: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden" style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#374151' }}>☰</button>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Welcome, {agroName}</span>
+      <div className="ab-main">
+        {/* Header */}
+        <header className="ab-main-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <button
+              className="md:hidden"
+              onClick={() => setSidebarOpen(true)}
+              style={{ background: 'none', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center' }}
+              aria-label="Open sidebar"
+            >
+              <span style={{ fontSize: 17 }}>☰</span>
+            </button>
+            <div>
+              <h1 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.2 }}>
+                🏭 Welcome, {agroName}
+              </h1>
+              <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, marginTop: 2 }}>Manage your agro-business</p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <NotificationCenter userRole="agro" userId={agroId} userEmail={agroEmail} onViewAll={() => setActiveTab('notifications')} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 9999, padding: '5px 12px', fontSize: 12, color: '#374151' }}>
-                <FaUserCircle style={{ fontSize: 14, color: '#9ca3af' }} /> {agroEmail}
-              </div>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#dbeafe', color: '#1d4ed8', borderRadius: 9999, padding: '3px 10px', fontSize: 11.5, fontWeight: 600 }}>
+              <FaBuilding style={{ fontSize: 10 }} /> Agro-Business
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <NotificationCenter userRole="agro" userId={agroId} userEmail={agroEmail} onViewAll={() => setActiveTab('notifications')} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#374151', maxWidth: 220, overflow: 'hidden' }}>
+              <FaUserCircle style={{ fontSize: 15, color: '#9ca3af', flexShrink: 0 }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{agroEmail}</span>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '24px 20px' }}>
+        <main className="ab-main-body">
           {activeTab === 'dashboard' && (
             <>
-              {/* Top stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
+              {/* KPI Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
                 {[
-                  { title: 'Products', value: metricsLoading ? '...' : metrics.products, accent: '#16a34a' },
-                  { title: 'Orders', value: metricsLoading ? '...' : metrics.orders, accent: '#d97706' },
-                  { title: 'Pending Orders', value: metricsLoading ? '...' : metrics.pendingOrders, accent: '#dc2626' },
-                  { title: 'Revenue (₹)', value: metricsLoading ? '...' : metrics.revenue, accent: '#2563eb' },
+                  { title: 'Total Products', value: metricsLoading ? '...' : metrics.products, accent: '#16a34a', iconBg: '#dcfce7', icon: <FaBoxOpen style={{ fontSize: 15, color: '#16a34a' }} /> },
+                  { title: 'Total Orders', value: metricsLoading ? '...' : metrics.orders, accent: '#d97706', iconBg: '#fef3c7', icon: <FaShoppingCart style={{ fontSize: 15, color: '#d97706' }} /> },
+                  { title: 'Pending Orders', value: metricsLoading ? '...' : metrics.pendingOrders, accent: '#dc2626', iconBg: '#fee2e2', icon: <FaBell style={{ fontSize: 15, color: '#dc2626' }} /> },
+                  { title: 'Revenue', value: metricsLoading ? '...' : `₹${Number(metrics.revenue || 0).toLocaleString('en-IN')}`, accent: '#2563eb', iconBg: '#dbeafe', icon: <FaChartLine style={{ fontSize: 15, color: '#2563eb' }} /> },
                 ].map((c, i) => (
                   <div key={i} className="pro-stat-card" style={{ borderLeft: `4px solid ${c.accent}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 8 }}>{c.title}</div>
-                    <div style={{ fontSize: 26, fontWeight: 800, color: '#111827' }}>{c.value}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <span className="pro-stat-label">{c.title}</span>
+                      <div style={{ width: 34, height: 34, background: c.iconBg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.icon}</div>
+                    </div>
+                    <div className="pro-stat-value">{c.value}</div>
                   </div>
                 ))}
               </div>
@@ -608,58 +629,85 @@ const AgroDashboard = () => {
               </div>
 
               {/* Recent products and orders */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="bg-white rounded-2xl shadow p-6">
-                  <div className="text-lg font-bold text-[#2F855A] mb-3">Recent Products</div>
-                  <div className="space-y-3">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 20, marginBottom: 20 }}>
+                {/* Recent Products */}
+                <div className="pro-card">
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 28, height: 28, background: '#dcfce7', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <FaBoxOpen style={{ fontSize: 13, color: '#16a34a' }} />
+                      </div>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Recent Products</span>
+                    </div>
+                    <button onClick={() => setActiveTab('products')} style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>View All →</button>
+                  </div>
+                  <div style={{ padding: '8px 0' }}>
                     {recentLoading ? (
-                      <div className="text-sm text-gray-500">Loading…</div>
+                      <div style={{ padding: '20px', textAlign: 'center', fontSize: 13, color: '#9ca3af' }}>Loading…</div>
                     ) : recentError ? (
-                      <div className="text-sm text-red-600">{recentError}</div>
+                      <div style={{ padding: '16px 20px', fontSize: 13, color: '#dc2626' }}>{recentError}</div>
                     ) : (recentProducts || []).length > 0 ? (
-                      <>
-                        {(recentProducts || []).map((p, idx) => (
-                          <div key={p._id || idx} className="flex items-center justify-between border-b pb-2">
-                            <div>
-                              <div className="font-semibold text-gray-800">{p.name}</div>
-                              <div className="text-xs text-gray-500">{p.category || '—'} · ₹{p.price}</div>
+                      (recentProducts || []).slice(0, 6).map((p, idx) => (
+                        <div key={p._id || idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f9fafb' }}>
+                          <div>
+                            <div style={{ fontSize: 13.5, fontWeight: 600, color: '#111827' }}>{p.name}</div>
+                            <div style={{ fontSize: 11.5, color: '#6b7280', marginTop: 2 }}>
+                              <span className="pro-badge pro-badge-gray" style={{ fontSize: 10 }}>{p.category || '—'}</span>
+                              <span style={{ marginLeft: 6, fontWeight: 700, color: '#16a34a' }}>₹{Number(p.price || 0).toLocaleString('en-IN')}</span>
                             </div>
-                            {p.imagePath && <img src={p.imagePath} alt="prod" className="h-10 w-10 object-cover rounded" />}
                           </div>
-                        ))}
-                        <div className="text-center mt-2">
-                          <button 
-                            onClick={() => setActiveTab('products')}
-                            className="text-sm text-[#2F855A] hover:underline"
-                          >
-                            View all products →
-                          </button>
+                          {p.imagePath && <img src={p.imagePath} alt="prod" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }} />}
                         </div>
-                      </>
+                      ))
                     ) : (
-                      <div className="text-sm text-gray-500">
-                        No products yet. <button onClick={() => setShowProductModal(true)} className="text-[#2F855A] hover:underline">Add your first product</button>
+                      <div className="pro-empty-state" style={{ padding: '28px 20px' }}>
+                        <div className="pro-empty-icon" style={{ fontSize: 20 }}>📦</div>
+                        <div className="pro-empty-title">No products yet</div>
+                        <button className="pro-btn pro-btn-primary pro-btn-sm" onClick={() => setShowProductModal(true)}><FaPlus style={{ fontSize: 10 }} /> Add Product</button>
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl shadow p-6">
-                  <div className="text-lg font-bold text-[#2F855A] mb-3">Recent Orders</div>
-                  <div className="space-y-3">
-                    {recentLoading ? (
-                      <div className="text-sm text-gray-500">Loading…</div>
-                    ) : recentError ? (
-                      <div className="text-sm text-red-600">{recentError}</div>
-                    ) : (recentOrders || []).map((o, idx) => (
-                      <div key={idx} className="grid grid-cols-4 gap-2 text-sm">
-                        <div className="font-semibold text-gray-800 col-span-2">{o.productId?.name || o.productName} × {o.quantity}</div>
-                        <div className="text-gray-600">{o.farmerId?.name || o.farmerName}</div>
-                        <div className="text-right">
-                          <span className={`px-2 py-1 rounded text-xs ${o.status === 'Completed' ? 'bg-green-100 text-green-700' : o.status === 'Shipped' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{o.status}</span>
-                        </div>
+
+                {/* Recent Orders */}
+                <div className="pro-card">
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 28, height: 28, background: '#fef3c7', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <FaShoppingCart style={{ fontSize: 13, color: '#d97706' }} />
                       </div>
-                    ))}
-                    {(!recentOrders || recentOrders.length === 0) && !recentLoading && !recentError && <div className="text-sm text-gray-500">No orders yet.</div>}
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Recent Orders</span>
+                    </div>
+                    <button onClick={() => setActiveTab('orders')} style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>View All →</button>
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    {recentLoading ? (
+                      <div style={{ padding: '20px', textAlign: 'center', fontSize: 13, color: '#9ca3af' }}>Loading…</div>
+                    ) : recentError ? (
+                      <div style={{ padding: '16px 20px', fontSize: 13, color: '#dc2626' }}>{recentError}</div>
+                    ) : (recentOrders || []).length > 0 ? (
+                      <table className="pro-table">
+                        <thead><tr><th>Product</th><th>Farmer</th><th>Qty</th><th>Status</th></tr></thead>
+                        <tbody>
+                          {(recentOrders || []).slice(0, 6).map((o, idx) => (
+                            <tr key={idx}>
+                              <td style={{ fontWeight: 600, fontSize: 13 }}>{o.productId?.name || o.productName}</td>
+                              <td style={{ fontSize: 12.5, color: '#6b7280' }}>{o.farmerId?.name || o.farmerName}</td>
+                              <td style={{ fontSize: 12.5 }}>{o.quantity}</td>
+                              <td>
+                                <span className={`pro-badge ${o.status === 'Completed' ? 'pro-badge-green' : o.status === 'Shipped' ? 'pro-badge-blue' : o.status === 'Rejected' ? 'pro-badge-red' : 'pro-badge-gray'}`}>{o.status}</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="pro-empty-state" style={{ padding: '28px 20px' }}>
+                        <div className="pro-empty-icon" style={{ fontSize: 20 }}>🛒</div>
+                        <div className="pro-empty-title">No orders yet</div>
+                        <div className="pro-empty-desc">Orders from farmers will appear here.</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

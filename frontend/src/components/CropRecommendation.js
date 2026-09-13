@@ -62,9 +62,14 @@ const CropRecommendation = ({ userEmail }) => {
 
   return (
     <div style={{ padding: '24px 0', fontFamily: "'Inter', sans-serif" }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-        <FaSeedling style={{ color: '#16a34a', fontSize: 20 }} />
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>Crop Recommendation</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <div style={{ width: 38, height: 38, background: '#dcfce7', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <FaSeedling style={{ color: '#16a34a', fontSize: 17 }} />
+        </div>
+        <div>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: '#111827', margin: 0 }}>Crop Recommendation</h2>
+          <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, marginTop: 1 }}>AI-powered crop selection based on your soil</p>
+        </div>
       </div>
       <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
         Enter your soil and weather parameters to get an AI-powered crop recommendation with financial estimates.
@@ -112,21 +117,22 @@ const CropRecommendation = ({ userEmail }) => {
         <button
           type="submit" disabled={loading}
           style={{
-            background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8,
-            padding: '11px 28px', fontSize: 14, fontWeight: 700,
-            cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
-            transition: 'background 0.15s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            background: loading ? '#9ca3af' : '#16a34a', color: '#fff', border: 'none', borderRadius: 9,
+            padding: '12px 28px', fontSize: 14, fontWeight: 700,
+            cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.15s',
+            boxShadow: loading ? 'none' : '0 3px 12px rgba(22,163,74,0.3)', fontFamily: 'inherit',
           }}
           onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#15803d'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = '#16a34a'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = loading ? '#9ca3af' : '#16a34a'; }}
         >
-          {loading ? '🔄 Analyzing...' : '🌱 Get Recommendation'}
+          {loading ? '⏳ Analyzing...' : <><FaSeedling style={{ fontSize: 13 }} /> Get Recommendation</>}
         </button>
       </form>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginTop: 16 }}>
-          {error}
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 9, padding: '10px 14px', fontSize: 13, marginTop: 16, fontWeight: 600 }}>
+          ⚠️ {error}
         </div>
       )}
 

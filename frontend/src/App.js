@@ -19,22 +19,20 @@ function App() {
       <Router>
         <div className="App">
           <Navbar />
-          <main className="container mx-auto px-4 py-8">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
-              <Route path="/agro-dashboard" element={<AgroDashboard />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/my-orders" element={<MyOrders />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
+            <Route path="/agro-dashboard" element={<AgroDashboard />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
         </div>
       </Router>
     </LanguageProvider>
   );
 }
 
-export default App; 
+export default App;

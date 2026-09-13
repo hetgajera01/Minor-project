@@ -70,24 +70,29 @@ const DiseaseDetection = ({ userEmail }) => {
   return (
     <div style={{ padding: '24px 0', fontFamily: "'Inter', sans-serif" }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <FaBug style={{ color: '#dc2626', fontSize: 20 }} />
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>Crop Disease Detection</h2>
+          <div style={{ width: 38, height: 38, background: '#fee2e2', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FaBug style={{ color: '#dc2626', fontSize: 17 }} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: 17, fontWeight: 800, color: '#111827', margin: 0 }}>Crop Disease Detection</h2>
+            <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, marginTop: 1 }}>AI-powered diagnosis from leaf images</p>
+          </div>
         </div>
-        <button onClick={fetchHistory} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#374151', cursor: 'pointer', fontWeight: 600 }}>
-          <FaHistory /> History
+        <button onClick={fetchHistory} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 13px', fontSize: 12, color: '#374151', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          <FaHistory style={{ fontSize: 11 }} /> History
         </button>
       </div>
-      <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
+      <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 18 }}>
         Upload a clear photo of a crop leaf for AI-powered disease analysis.
       </p>
 
       {/* Disclaimer */}
       <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '10px 14px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-        <FaExclamationTriangle style={{ color: '#d97706', fontSize: 14, marginTop: 1, flexShrink: 0 }} />
+        <FaExclamationTriangle style={{ color: '#d97706', fontSize: 13, marginTop: 2, flexShrink: 0 }} />
         <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.6 }}>
-          <strong>Important:</strong> This is an AI-assisted tool, not a substitute for professional agricultural advice. Always consult your local agricultural extension officer or KVK for critical decisions.
+          <strong>Important:</strong> This is an AI-assisted tool. Always consult your local agricultural extension officer or KVK for critical decisions.
         </p>
       </div>
 
@@ -99,22 +104,25 @@ const DiseaseDetection = ({ userEmail }) => {
             onDragOver={e => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onClick={() => fileRef.current?.click()}
-            style={{
-              border: `2px dashed ${dragging ? '#16a34a' : '#d1d5db'}`,
-              borderRadius: 14, padding: 32, textAlign: 'center', cursor: 'pointer',
-              background: dragging ? '#f0fdf4' : '#fafafa',
-              transition: 'all 0.2s', marginBottom: 14,
-            }}
+            className={`pro-upload-zone${dragging ? ' dragging' : ''}`}
           >
             {previewUrl ? (
-              <img src={previewUrl} alt="Leaf preview" style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 8, objectFit: 'contain' }} />
+              <img src={previewUrl} alt="Leaf preview" style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 10, objectFit: 'contain' }} />
             ) : (
               <>
-                <GiPlantRoots style={{ fontSize: 48, color: '#9ca3af', marginBottom: 12 }} />
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
-                  Drag & drop a leaf photo here
+                <div style={{ width: 64, height: 64, background: '#fee2e2', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                  <GiPlantRoots style={{ fontSize: 32, color: '#dc2626' }} />
                 </div>
-                <div style={{ fontSize: 12, color: '#9ca3af' }}>or click to browse · JPG, PNG, WEBP · max 10MB</div>
+                <div style={{ fontSize: 14.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>
+                  Drag &amp; drop a leaf photo here
+                </div>
+                <div style={{ fontSize: 12.5, color: '#9ca3af' }}>or click to browse</div>
+                <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center', gap: 6 }}>
+                  {['JPG', 'PNG', 'WEBP'].map(ext => (
+                    <span key={ext} style={{ background: '#f3f4f6', color: '#6b7280', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>{ext}</span>
+                  ))}
+                  <span style={{ background: '#f3f4f6', color: '#6b7280', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>max 10MB</span>
+                </div>
               </>
             )}
           </div>
@@ -125,22 +133,27 @@ const DiseaseDetection = ({ userEmail }) => {
             disabled={!selectedImage || loading}
             style={{
               width: '100%', background: !selectedImage || loading ? '#9ca3af' : '#dc2626',
-              color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontSize: 14,
+              color: '#fff', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14,
               fontWeight: 700, cursor: !selectedImage || loading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              transition: 'background 0.15s',
+              transition: 'background 0.15s', marginTop: 14, fontFamily: 'inherit',
+              boxShadow: selectedImage && !loading ? '0 3px 10px rgba(220,38,38,0.25)' : 'none',
             }}
           >
-            {loading ? <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Analyzing...</> : <><FaBug /> Detect Disease</>}
+            {loading
+              ? <><FaSpinner className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} /> Analyzing…</>
+              : <><FaBug /> Detect Disease</>}
           </button>
 
-          {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginTop: 12 }}>{error}</div>}
+          {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginTop: 12, fontWeight: 600 }}>⚠️ {error}</div>}
 
           {/* Tips */}
-          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 14px', marginTop: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#2563eb', marginBottom: 8 }}>📸 Tips for best results</div>
+          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '14px 16px', marginTop: 14 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#2563eb', marginBottom: 8 }}>📸 Tips for best results</div>
             {['Upload a clear, well-lit photo of the affected leaf', 'Ensure the leaf fills most of the frame', 'Avoid blurry or dark images', 'Take photos in natural daylight'].map((tip, i) => (
-              <div key={i} style={{ fontSize: 12, color: '#1d4ed8', marginBottom: 4 }}>✓ {tip}</div>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#1d4ed8', marginBottom: 5 }}>
+                <FaCheckCircle style={{ fontSize: 11, flexShrink: 0 }} /> {tip}
+              </div>
             ))}
           </div>
         </div>

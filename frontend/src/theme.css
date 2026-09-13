@@ -2,50 +2,65 @@
 :root {
   --color-primary:     #16a34a;
   --color-primary-dk:  #15803d;
+  --color-primary-lt:  #dcfce7;
   --color-accent:      #d97706;
   --color-accent-dk:   #b45309;
+  --color-ai:          #7c3aed;
+  --color-ai-lt:       #ede9fe;
+  --color-info:        #2563eb;
+  --color-info-lt:     #dbeafe;
+  --color-danger:      #dc2626;
+  --color-danger-lt:   #fee2e2;
+  --color-warning:     #d97706;
+  --color-warning-lt:  #fef3c7;
+  --color-success:     #16a34a;
+  --color-success-lt:  #dcfce7;
+  --color-teal:        #0d9488;
+  --color-teal-lt:     #ccfbf1;
 
-  --bg-page:           #fafafa;
-  --bg-surface:        #ffffff;
-  --bg-muted:          #f9fafb;
-  --bg-muted-2:        #f3f4f6;
+  --bg-page:    #f5f6fa;
+  --bg-surface: #ffffff;
+  --bg-muted:   #f9fafb;
+  --bg-muted-2: #f3f4f6;
 
-  --text-primary:      #111827;
-  --text-secondary:    #374151;
-  --text-muted:        #6b7280;
+  --text-primary:   #111827;
+  --text-secondary: #374151;
+  --text-muted:     #6b7280;
 
-  --border:            #e5e7eb;
-  --border-muted:      #f3f4f6;
+  --border:       #e5e7eb;
+  --border-muted: #f3f4f6;
 
-  --shadow-sm:   0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg:   0 8px 30px rgba(0,0,0,0.12);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-lg:   0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-xl:   0 20px 60px rgba(0,0,0,0.16);
 
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
+  --radius-xl: 20px;
 }
 
 /* ========== Dark Mode ========== */
 .dark {
-  --bg-page:    #111827;
-  --bg-surface: #1f2937;
-  --bg-muted:   #1f2937;
-  --bg-muted-2: #374151;
+  --bg-page:    #0f172a;
+  --bg-surface: #1e293b;
+  --bg-muted:   #1e293b;
+  --bg-muted-2: #334155;
 
-  --text-primary:   #f9fafb;
-  --text-secondary: #e5e7eb;
-  --text-muted:     #9ca3af;
+  --text-primary:   #f1f5f9;
+  --text-secondary: #e2e8f0;
+  --text-muted:     #94a3b8;
 
-  --border:       #374151;
-  --border-muted: #1f2937;
+  --border:       #334155;
+  --border-muted: #1e293b;
 
   --color-primary:    #22c55e;
   --color-primary-dk: #16a34a;
 
-  --shadow-sm:  0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.4);
-  --shadow-lg:  0 8px 30px rgba(0,0,0,0.5);
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg:  0 10px 40px rgba(0,0,0,0.5);
 }
 
 /* ========== Apply Tokens ========== */
@@ -54,19 +69,3 @@ body {
   color: var(--text-primary);
   transition: background-color 0.25s ease, color 0.25s ease;
 }
-
-/* ========== Font size settings (from Settings page) ========== */
-.text-small  { font-size: 13px; }
-.text-medium { font-size: 15px; }
-.text-large  { font-size: 17px; }
-
-/* ========== Layout density ========== */
-.layout-compact .space-y-6  { margin-top: 0.75rem; margin-bottom: 0.75rem; }
-.layout-compact .p-6         { padding: 1rem; }
-.layout-detailed .space-y-6 { margin-top: 1.5rem; margin-bottom: 1.5rem; }
-.layout-detailed .p-6        { padding: 1.5rem; }
-
-/* ========== Language fonts ========== */
-[data-lang="hi"] { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; }
-[data-lang="gu"] { font-family: 'Noto Sans Gujarati', 'Inter', sans-serif; }
-[data-lang="en"] { font-family: 'Inter', sans-serif; }
