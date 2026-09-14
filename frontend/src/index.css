@@ -622,3 +622,303 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', mon
 @media (max-width: 768px) {
   .ab-sidebar-overlay { display: block; }
 }
+
+/* ========================================================
+   PREMIUM ANIMATIONS
+   ======================================================== */
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-12px) rotate(0.4deg); }
+}
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmerSlide {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(22,163,74,0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(22,163,74,0); }
+  100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
+}
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  50%  { opacity: 1; transform: scale(1.05); }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes drawLine {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* ========================================================
+   ANIMATION UTILITIES
+   ======================================================== */
+.animate-float       { animation: floatSlow 4s ease-in-out infinite; }
+.animate-float-card  { animation: floatCard 4s ease-in-out infinite; }
+.animate-slide-up    { animation: slideUpFade 0.5s ease both; }
+.animate-fade-scale  { animation: fadeInScale 0.35s ease both; }
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 400px 100%;
+  animation: shimmerSlide 1.5s infinite;
+}
+.animate-pulse-ring  { animation: pulseRing 2s infinite; }
+.animate-spin-slow   { animation: spinSlow 3s linear infinite; }
+.animate-bounce-in   { animation: bounceIn 0.6s cubic-bezier(0.68,-0.55,0.265,1.55) both; }
+
+/* ========================================================
+   GLASSMORPHISM
+   ======================================================== */
+.glass {
+  background: rgba(255,255,255,0.10) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+}
+.glass-dark {
+  background: rgba(0,0,0,0.25) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* ========================================================
+   GRADIENT TEXT
+   ======================================================== */
+.text-gradient-green {
+  background: linear-gradient(135deg, #4ade80, #22c55e, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-blue {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6, #2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-purple {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========================================================
+   HOVER LIFT / INTERACTION UTILITIES
+   ======================================================== */
+.hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+.hover-lift:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12) !important;
+}
+.hover-lift-sm {
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+.hover-lift-sm:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.09) !important;
+}
+.hover-scale {
+  transition: transform 0.2s ease !important;
+}
+.hover-scale:hover {
+  transform: scale(1.04) !important;
+}
+
+/* ========================================================
+   GRADIENT BACKGROUNDS (reusable)
+   ======================================================== */
+.bg-gradient-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #14532d 100%);
+}
+.bg-gradient-green {
+  background: linear-gradient(135deg, #14532d, #15803d, #166534);
+}
+.bg-gradient-card-green {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+}
+.bg-gradient-card-blue {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+}
+.bg-gradient-card-purple {
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+}
+.bg-gradient-card-amber {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+
+/* ========================================================
+   PREMIUM BUTTON STYLES
+   ======================================================== */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff; border: none; border-radius: 11px;
+  padding: 12px 26px; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 5px 18px rgba(22,163,74,0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s;
+  text-decoration: none;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 28px rgba(22,163,74,0.45);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #fff; color: #374151;
+  border: 1.5px solid #e5e7eb; border-radius: 11px;
+  padding: 12px 26px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  text-decoration: none;
+}
+.btn-secondary:hover {
+  border-color: #d1d5db; background: #f9fafb;
+  transform: translateY(-1px);
+}
+
+.btn-ghost-white {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.3);
+  color: #fff; border-radius: 11px;
+  padding: 12px 24px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s, border-color 0.2s;
+  text-decoration: none;
+}
+.btn-ghost-white:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.5);
+}
+
+/* ========================================================
+   PREMIUM CARD VARIANTS
+   ======================================================== */
+.card-premium {
+  background: #fff;
+  border: 1.5px solid #f3f4f6;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s;
+}
+.card-premium:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.10);
+  border-color: #e5e7eb;
+}
+.card-dark {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  backdrop-filter: blur(20px);
+  transition: background 0.25s, border-color 0.25s;
+}
+.card-dark:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ========================================================
+   SECTION SPACING HELPERS
+   ======================================================== */
+.section-xl { padding: 96px 24px; }
+.section-lg { padding: 72px 24px; }
+.section-md { padding: 56px 24px; }
+.section-sm { padding: 40px 24px; }
+
+/* ========================================================
+   BADGE / PILL UTILITIES
+   ======================================================== */
+.badge-green {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #dcfce7; color: #15803d;
+  font-size: 11px; font-weight: 700; padding: 4px 14px;
+  border-radius: 20px; border: 1px solid #bbf7d0;
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
+.badge-blue {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #dbeafe; color: #1d4ed8;
+  font-size: 11px; font-weight: 700; padding: 4px 14px;
+  border-radius: 20px; border: 1px solid #bfdbfe;
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
+.badge-purple {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #ede9fe; color: #5b21b6;
+  font-size: 11px; font-weight: 700; padding: 4px 14px;
+  border-radius: 20px; border: 1px solid #ddd6fe;
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
+.badge-amber {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #fef3c7; color: '#d97706';
+  font-size: 11px; font-weight: 700; padding: 4px 14px;
+  border-radius: 20px; border: 1px solid #fde68a;
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
+
+/* ========================================================
+   DOT INDICATOR (live status)
+   ======================================================== */
+.dot-live {
+  display: inline-block;
+  width: 8px; height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: pulseRing 2s infinite;
+}
+
+/* ========================================================
+   SCROLL FADE-IN (via JS IntersectionObserver class toggle)
+   ======================================================== */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ========================================================
+   HERO GRID / TYPOGRAPHY HELPERS
+   ======================================================== */
+.hero-title {
+  font-size: clamp(2.2rem, 5.5vw, 3.75rem);
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1.08;
+}
+.section-title {
+  font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+}

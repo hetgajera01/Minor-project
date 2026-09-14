@@ -33,7 +33,7 @@ function getModel() {
   if (!genAI) {
     genAI = new GoogleGenerativeAI(GEMINI_KEY);
     model = genAI.getGenerativeModel({
-      model: "gemini-3.6-flash",
+      model: "gemini-1.5-flash",
       systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
     });
   }
