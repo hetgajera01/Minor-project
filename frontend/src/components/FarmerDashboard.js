@@ -4,6 +4,7 @@ import {
   FaFileAlt, FaUsers, FaSignOutAlt, FaCog,
   FaShoppingCart, FaRobot, FaBug, FaChartLine, FaBell, FaTh,
   FaBars, FaLeaf, FaArrowUp, FaArrowDown, FaTrash, FaSync,
+  FaGlobeAsia,
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { GiFarmTractor, GiWheat } from 'react-icons/gi';
@@ -16,6 +17,9 @@ import NotificationCenter from './NotificationCenter';
 import { WeatherWidgetInline } from './WeatherWidget';
 import AgriAI from './AgriAI';
 import DiseaseDetection from './DiseaseDetection';
+import CropYieldPrediction from './CropYieldPrediction';
+import CropRecommendation from './CropRecommendation';
+import DigitalTwin from './DigitalTwin/DigitalTwin';
 
 /* ── Sidebar nav items ─────────────────────────────────── */
 const NAV_ITEMS = [
@@ -25,6 +29,7 @@ const NAV_ITEMS = [
   { key: 'costAnalysis', icon: <FaChartLine />,     label: 'Cost Analysis',    section: 'main' },
   { key: 'finTracker',   icon: <FaUsers />,         label: 'Finance Tracker',  section: 'main' },
   { key: 'reports',      icon: <FaFileAlt />,       label: 'Reports',          section: 'main' },
+  { key: 'digitalTwin',  icon: <FaGlobeAsia />,     label: 'Digital Twin',     section: 'main' },
   { key: 'agriAI',       icon: <FaRobot />,         label: 'AgriAI',           section: 'ai' },
   { key: 'disease',      icon: <FaBug />,           label: 'Disease Detect',   section: 'ai' },
   { key: 'yieldPred',    icon: <FaSeedling />,      label: 'Yield Prediction', section: 'ai' },
@@ -59,6 +64,7 @@ const FarmerDashboard = () => {
   const [showCropRecommendation,setShowCropRecommendation]= React.useState(false);
   const [showAgriAI,            setShowAgriAI]            = React.useState(false);
   const [showDiseaseDetection,  setShowDiseaseDetection]  = React.useState(false);
+  const [showDigitalTwin,       setShowDigitalTwin]       = React.useState(false);
   const [alerts,                setAlerts]                = React.useState([]);
   const [showNotifications,     setShowNotifications]     = React.useState(false);
   const [loadingAlerts,         setLoadingAlerts]         = React.useState(false);
@@ -209,6 +215,7 @@ const FarmerDashboard = () => {
     if (key === 'cropRec')      { setShowCropRecommendation(true); return; }
     if (key === 'agriAI')       { setShowAgriAI(true); return; }
     if (key === 'disease')      { setShowDiseaseDetection(true); return; }
+    if (key === 'digitalTwin')  { setShowDigitalTwin(true); return; }
   };
 
   /* ── shared input/label style ─────────────────────────── */
@@ -554,72 +561,80 @@ const FarmerDashboard = () => {
           </div>
 
           {/* ══ SUMMARY / ANALYTICS ROW ═════════════════════ */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-            {/* Income Summary */}
-            <div className="pro-card" style={{ padding: '20px 22px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <FaMoneyBillWave style={{ color: '#16a34a', fontSize: 15 }} />
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Income Overview</span>
-              </div>
-              {incomeList.length > 0 ? (
-                <div>
-                  <div style={{ fontSize: 32, fontWeight: 800, color: '#16a34a', letterSpacing: '-0.5px', marginBottom: 4 }}>
-                    ₹{incomeList.reduce((s, i) => s + Number(i.amount), 0).toLocaleString('en-IN')}
+          {(() => {
+            const totalIncome = incomeList.reduce((s, i) => s + Number(i.amount || 0), 0);
+            const totalExpenses = expenseList.reduce((s, e) => s + Number(e.amount || 0), 0);
+            const expenseRatio = totalIncome > 0 ? Math.min(Math.round((totalExpenses / totalIncome) * 100), 100) : 0;
+            const savingsRatio = totalIncome > 0 ? Math.min(Math.round(((totalIncome - totalExpenses) / totalIncome) * 100), 100) : 0;
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+                {/* Income Summary */}
+                <div className="pro-card" style={{ padding: '20px 22px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                    <FaMoneyBillWave style={{ color: '#16a34a', fontSize: 15 }} />
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Income Overview</span>
                   </div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>Total from {incomeList.length} transactions</div>
-                  <div style={{ marginTop: 14, height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ height: 6, width: '72%', background: '#16a34a', borderRadius: 99 }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
-                    <span>Budget progress</span><span>72%</span>
-                  </div>
+                  {incomeList.length > 0 ? (
+                    <div>
+                      <div style={{ fontSize: 32, fontWeight: 800, color: '#16a34a', letterSpacing: '-0.5px', marginBottom: 4 }}>
+                        ₹{totalIncome.toLocaleString('en-IN')}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#6b7280' }}>Total from {incomeList.length} transaction{incomeList.length !== 1 ? 's' : ''}</div>
+                      <div style={{ marginTop: 14, height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+                        <div style={{ height: 6, width: `${savingsRatio}%`, background: '#16a34a', borderRadius: 99, transition: 'width 0.4s ease' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
+                        <span>Savings rate</span><span style={{ color: savingsRatio >= 50 ? '#16a34a' : '#d97706', fontWeight: 600 }}>{savingsRatio}%</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '16px 0', color: '#9ca3af', fontSize: 13 }}>No income data yet</div>
+                  )}
                 </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '16px 0', color: '#9ca3af', fontSize: 13 }}>No income data yet</div>
-              )}
-            </div>
 
-            {/* Expense Summary */}
-            <div className="pro-card" style={{ padding: '20px 22px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <FaChartPie style={{ color: '#d97706', fontSize: 15 }} />
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Expense Overview</span>
-              </div>
-              {expenseList.length > 0 ? (
-                <div>
-                  <div style={{ fontSize: 32, fontWeight: 800, color: '#d97706', letterSpacing: '-0.5px', marginBottom: 4 }}>
-                    ₹{expenseList.reduce((s, e) => s + Number(e.amount), 0).toLocaleString('en-IN')}
+                {/* Expense Summary */}
+                <div className="pro-card" style={{ padding: '20px 22px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                    <FaChartPie style={{ color: '#d97706', fontSize: 15 }} />
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Expense Overview</span>
                   </div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>Total from {expenseList.length} transactions</div>
-                  <div style={{ marginTop: 14, height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ height: 6, width: '48%', background: '#d97706', borderRadius: 99 }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
-                    <span>Of income</span><span>48%</span>
-                  </div>
+                  {expenseList.length > 0 ? (
+                    <div>
+                      <div style={{ fontSize: 32, fontWeight: 800, color: '#d97706', letterSpacing: '-0.5px', marginBottom: 4 }}>
+                        ₹{totalExpenses.toLocaleString('en-IN')}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#6b7280' }}>Total from {expenseList.length} transaction{expenseList.length !== 1 ? 's' : ''}</div>
+                      <div style={{ marginTop: 14, height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+                        <div style={{ height: 6, width: `${expenseRatio}%`, background: expenseRatio > 80 ? '#dc2626' : '#d97706', borderRadius: 99, transition: 'width 0.4s ease' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
+                        <span>% of income</span><span style={{ color: expenseRatio > 80 ? '#dc2626' : expenseRatio > 60 ? '#d97706' : '#16a34a', fontWeight: 600 }}>{expenseRatio}%</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '16px 0', color: '#9ca3af', fontSize: 13 }}>No expense data yet</div>
+                  )}
                 </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '16px 0', color: '#9ca3af', fontSize: 13 }}>No expense data yet</div>
-              )}
-            </div>
 
-            {/* AI Tip / Notification */}
-            <div className="pro-card" style={{ padding: '20px 22px', background: 'linear-gradient(135deg,#faf5ff,#ede9fe)', border: '1px solid #ddd6fe' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <div style={{ width: 30, height: 30, background: '#7c3aed', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FaRobot style={{ color: '#fff', fontSize: 14 }} />
+                {/* AI Tip / Notification */}
+                <div className="pro-card" style={{ padding: '20px 22px', background: 'linear-gradient(135deg,#faf5ff,#ede9fe)', border: '1px solid #ddd6fe' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <div style={{ width: 30, height: 30, background: '#7c3aed', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FaRobot style={{ color: '#fff', fontSize: 14 }} />
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#4c1d95' }}>AgriAI Insight</span>
+                    <span className="pro-badge pro-badge-purple" style={{ fontSize: 10, marginLeft: 'auto' }}>AI</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: '#5b21b6', lineHeight: 1.65, marginBottom: 14 }}>
+                    Your farm finances are being tracked. Use AgriAI to get personalised advice on crop selection, expense reduction, and market timing.
+                  </p>
+                  <button onClick={() => setShowAgriAI(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <FaRobot style={{ fontSize: 11 }} /> Ask AgriAI
+                  </button>
                 </div>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#4c1d95' }}>AgriAI Insight</span>
-                <span className="pro-badge pro-badge-purple" style={{ fontSize: 10, marginLeft: 'auto' }}>AI</span>
               </div>
-              <p style={{ fontSize: 13, color: '#5b21b6', lineHeight: 1.65, marginBottom: 14 }}>
-                Your farm finances are being tracked. Use AgriAI to get personalised advice on crop selection, expense reduction, and market timing.
-              </p>
-              <button onClick={() => setShowAgriAI(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                <FaRobot style={{ fontSize: 11 }} /> Ask AgriAI
-              </button>
-            </div>
-          </div>
+            );
+          })()}
 
         </main>
 
@@ -754,7 +769,7 @@ const FarmerDashboard = () => {
         <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowYieldPrediction(false); setActiveView('overview'); } }}>
           <div style={{ background: '#fff', borderRadius: 16, padding: 4, width: '100%', maxWidth: 580, maxHeight: '90vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
             <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowYieldPrediction(false); setActiveView('overview'); }} aria-label="Close">×</button>
-            {React.createElement(require('./CropYieldPrediction').default)}
+            <CropYieldPrediction userEmail={userEmail} />
           </div>
         </div>
       )}
@@ -764,7 +779,7 @@ const FarmerDashboard = () => {
         <div className="pro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowCropRecommendation(false); setActiveView('overview'); } }}>
           <div style={{ background: '#fff', borderRadius: 16, padding: 4, width: '100%', maxWidth: 640, maxHeight: '90vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-xl)' }}>
             <button className="pro-modal-close" style={{ position: 'absolute', top: 12, right: 14, zIndex: 10 }} onClick={() => { setShowCropRecommendation(false); setActiveView('overview'); }} aria-label="Close">×</button>
-            {React.createElement(require('./CropRecommendation').default, { userEmail })}
+            <CropRecommendation userEmail={userEmail} />
           </div>
         </div>
       )}
@@ -816,6 +831,11 @@ const FarmerDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Digital Twin Fullscreen Overlay */}
+      {showDigitalTwin && (
+        <DigitalTwin onClose={() => { setShowDigitalTwin(false); setActiveView('overview'); }} />
       )}
     </div>
   );

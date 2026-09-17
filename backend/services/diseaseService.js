@@ -25,7 +25,7 @@ function getVisionModel() {
   }
   if (!genAI) {
     genAI = new GoogleGenerativeAI(GEMINI_KEY);
-    visionModel = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+    visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   }
   return visionModel;
 }

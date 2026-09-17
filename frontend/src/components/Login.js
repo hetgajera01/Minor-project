@@ -1,8 +1,27 @@
 import React, { useState } from 'react';
-import { FaLeaf, FaUser, FaBuilding, FaEye, FaEyeSlash, FaEnvelope, FaLock, FaCheck, FaChartLine, FaSeedling } from 'react-icons/fa';
+import { FaLeaf, FaUser, FaBuilding, FaEye, FaEyeSlash, FaEnvelope, FaLock, FaCheck, FaChartLine, FaArrowRight, FaShieldAlt } from 'react-icons/fa';
 import { GiPitchfork, GiFarmTractor } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
+/* ── Shared input styles ─────────────────────────────────── */
+const inputBase = {
+  width: '100%', border: '1.5px solid #e5e7eb', borderRadius: 10,
+  padding: '12px 14px', fontSize: 14, color: '#111827',
+  background: '#fff', outline: 'none', boxSizing: 'border-box',
+  fontFamily: 'inherit', transition: 'border-color 0.2s, box-shadow 0.2s',
+};
+const inputWithIcon = { ...inputBase, paddingLeft: 44 };
+const labelStyle = { fontSize: 12.5, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6, letterSpacing: '0.2px' };
+
+const focusStyle = (e) => {
+  e.target.style.borderColor = '#16a34a';
+  e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)';
+};
+const blurStyle = (e) => {
+  e.target.style.borderColor = '#e5e7eb';
+  e.target.style.boxShadow = 'none';
+};
 
 const Login = () => {
   const [userType, setUserType] = useState('farmer');
@@ -22,7 +41,6 @@ const Login = () => {
   const [agroIdPreview, setAgroIdPreview] = React.useState(null);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [isNewUser, setIsNewUser] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
@@ -48,7 +66,7 @@ const Login = () => {
         const isFirstLogin = localStorage.getItem('isFirstLogin') === null;
         if (isFirstLogin) {
           localStorage.setItem('isFirstLogin', 'true');
-          setSuccessMessage('Welcome! Please update your profile information for a better experience.');
+          setSuccessMessage('Welcome! Setting up your dashboard...');
           setTimeout(() => navigate('/farmer-dashboard'), 1200);
         } else {
           navigate('/farmer-dashboard');
@@ -59,10 +77,10 @@ const Login = () => {
         localStorage.setItem('agroId', data._id);
         localStorage.setItem('agroName', data.agroName);
         localStorage.setItem('agroEmail', data.email);
-        setSuccessMessage('Logged in successfully. Redirecting...');
+        setSuccessMessage('Logged in! Redirecting...');
         setTimeout(() => navigate('/agro-dashboard'), 800);
       } else {
-        setError('Unexpected response');
+        setError('Unexpected response from server.');
       }
     } catch (err) {
       if (err.response?.status === 404) setError('No account found with this email.');
@@ -111,7 +129,7 @@ const Login = () => {
         if (agroIdProof) fd.append('idProof', agroIdProof);
         await axios.post('/api/user/agro/register', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
         setShowRegister(false);
-        setSuccessMessage('Account created successfully! You can now log in.');
+        setSuccessMessage('Business account created! You can now log in.');
       } catch (err) {
         setError(err.response?.data?.message || 'Agro registration failed');
       } finally { setLoading(false); }
@@ -127,113 +145,140 @@ const Login = () => {
     if (/[^A-Za-z0-9]/.test(pwd)) score++;
     return score;
   };
-
   const strengthLabel = (s) => ['', 'Weak', 'Fair', 'Good', 'Strong'][s] || '';
   const strengthColor = (s) => ['', '#dc2626', '#d97706', '#2563eb', '#16a34a'][s] || '#e5e7eb';
 
-  const inputStyle = {
-    width: '100%', border: '1.5px solid #e5e7eb', borderRadius: 9,
-    padding: '11px 14px', fontSize: 14, color: '#111827',
-    background: '#fff', outline: 'none', boxSizing: 'border-box',
-    fontFamily: 'inherit', transition: 'border-color 0.15s, box-shadow 0.15s',
+  const PwStrength = ({ pwd }) => {
+    const s = passwordStrength(pwd);
+    if (!pwd) return null;
+    return (
+      <div style={{ marginTop: 6 }}>
+        <div style={{ display: 'flex', gap: 3 }}>
+          {[1,2,3,4].map(i => (
+            <div key={i} style={{ flex: 1, height: 4, borderRadius: 99, background: i <= s ? strengthColor(s) : '#e5e7eb', transition: 'background 0.25s' }} />
+          ))}
+        </div>
+        <div style={{ fontSize: 11, color: strengthColor(s), marginTop: 4, fontWeight: 700 }}>{strengthLabel(s)} password</div>
+      </div>
+    );
   };
-  const inputWithIconStyle = { ...inputStyle, paddingLeft: 42 };
-  const labelStyle = { fontSize: 12.5, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 5 };
+
+  const AlertBox = ({ type, msg }) => !msg ? null : (
+    <div style={{
+      background: type === 'error' ? '#fef2f2' : '#f0fdf4',
+      border: `1px solid ${type === 'error' ? '#fecaca' : '#bbf7d0'}`,
+      color: type === 'error' ? '#b91c1c' : '#15803d',
+      borderRadius: 10, padding: '11px 15px', fontSize: 13.5,
+      fontWeight: 600, marginBottom: 20,
+      display: 'flex', alignItems: 'center', gap: 9,
+      animation: 'fadeIn 0.25s ease',
+    }}>
+      {type === 'error' ? '⚠️' : '✓'} {msg}
+    </div>
+  );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f6fa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f0fdf4 0%, #eff6ff 50%, #fefce8 100%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '32px 16px', fontFamily: "'Inter', sans-serif",
+    }}>
+      <style>{`
+        @keyframes fadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .login-card { animation: slideUp 0.4s ease; }
+      `}</style>
 
-      {/* ── MAIN CARD ─────────────────────────────────────── */}
-      <div style={{
-        width: '100%', maxWidth: 980,
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.10)', overflow: 'hidden',
+      {/* ── MAIN CARD ─────────────────────────────────────────── */}
+      <div className="login-card" style={{
+        width: '100%', maxWidth: 1000,
+        display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
+        background: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 24,
+        boxShadow: '0 32px 80px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)',
+        overflow: 'hidden',
       }}>
 
-        {/* LEFT: Form */}
-        <div style={{ padding: '44px 40px 40px' }}>
+        {/* LEFT — Form ──────────────────────────────────────── */}
+        <div style={{ padding: '48px 44px 44px' }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-            <div style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(22,163,74,0.3)' }}>
-              <FaLeaf style={{ color: '#fff', fontSize: 16 }} />
+          <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 36, textDecoration: 'none' }}>
+            <div style={{
+              background: 'linear-gradient(135deg,#16a34a,#15803d)',
+              borderRadius: 11, width: 38, height: 38,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(22,163,74,0.35)',
+            }}>
+              <FaLeaf style={{ color: '#fff', fontSize: 17 }} />
             </div>
-            <span style={{ fontWeight: 800, fontSize: 20, color: '#111827', letterSpacing: '-0.4px' }}>AgriBudget</span>
-          </div>
+            <span style={{ fontWeight: 900, fontSize: 20, color: '#111827', letterSpacing: '-0.5px' }}>AgriBudget</span>
+          </a>
 
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 4, letterSpacing: '-0.4px' }}>
+          <h2 style={{ fontSize: 26, fontWeight: 900, color: '#111827', marginBottom: 6, letterSpacing: '-0.5px' }}>
             Welcome back 👋
           </h2>
-          <p style={{ fontSize: 13.5, color: '#9ca3af', marginBottom: 28 }}>
-            Sign in to your account to continue
+          <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 28, fontWeight: 500 }}>
+            Sign in to continue to your dashboard
           </p>
 
           {/* User Type Toggle */}
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 26 }}>
             <label style={labelStyle}>I am a:</label>
-            <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 10, padding: 4, gap: 4 }}>
+            <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 12, padding: 5, gap: 4 }}>
               {[
-                { id: 'farmer', icon: <GiFarmTractor style={{ fontSize: 14, color: userType === 'farmer' ? '#16a34a' : '#9ca3af' }} />, label: 'Farmer' },
-                { id: 'agro-business', icon: <FaBuilding style={{ fontSize: 13, color: userType === 'agro-business' ? '#16a34a' : '#9ca3af' }} />, label: 'Agro-Business' },
+                { id: 'farmer', icon: <GiFarmTractor style={{ fontSize: 14 }} />, label: 'Farmer' },
+                { id: 'agro-business', icon: <FaBuilding style={{ fontSize: 13 }} />, label: 'Agro-Business' },
               ].map(t => (
                 <button key={t.id} type="button" onClick={() => setUserType(t.id)} style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                  padding: '9px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                  fontSize: 13, fontWeight: 600,
+                  padding: '10px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  fontSize: 13, fontWeight: 700,
                   background: userType === t.id ? '#fff' : 'transparent',
                   color: userType === t.id ? '#16a34a' : '#6b7280',
-                  boxShadow: userType === t.id ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                  transition: 'all 0.15s',
+                  boxShadow: userType === t.id ? '0 2px 8px rgba(0,0,0,0.10)' : 'none',
+                  transition: 'all 0.2s',
+                  fontFamily: 'inherit',
                 }}>
-                  {t.icon} {t.label}
+                  <span style={{ color: userType === t.id ? '#16a34a' : '#9ca3af', transition: 'color 0.2s' }}>{t.icon}</span>
+                  {t.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Login Form */}
+          {/* Form */}
           <form onSubmit={handleSubmit}>
-            {error && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 9, padding: '10px 14px', fontSize: 13, fontWeight: 600, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-                ⚠️ {error}
-              </div>
-            )}
-            {successMessage && (
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: 9, padding: '10px 14px', fontSize: 13, fontWeight: 600, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }} className="animate-fade-in-scale">
-                ✓ {successMessage}
-              </div>
-            )}
+            <AlertBox type="error" msg={error} />
+            <AlertBox type="success" msg={successMessage} />
 
-            {/* Email */}
-            <div style={{ marginBottom: 16 }}>
-              <label htmlFor="email" style={labelStyle}>Email Address</label>
+            <div style={{ marginBottom: 18 }}>
+              <label htmlFor="login-email" style={labelStyle}>Email Address</label>
               <div style={{ position: 'relative' }}>
                 <FaEnvelope style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 14 }} />
                 <input
-                  id="email" name="email" type="text" required
+                  id="login-email" name="email" type="email" required
                   value={formData.email} onChange={handleInputChange}
-                  style={inputWithIconStyle} placeholder="Enter your email"
+                  style={inputWithIcon} placeholder="your@email.com"
                   aria-label="Email address"
-                  onFocus={e => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
-                  onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+                  onFocus={focusStyle} onBlur={blurStyle}
                 />
               </div>
             </div>
 
-            {/* Password */}
-            <div style={{ marginBottom: 22 }}>
-              <label htmlFor="password" style={labelStyle}>Password</label>
+            <div style={{ marginBottom: 8 }}>
+              <label htmlFor="login-password" style={labelStyle}>Password</label>
               <div style={{ position: 'relative' }}>
                 <FaLock style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 14 }} />
                 <input
-                  id="password" name="password"
+                  id="login-password" name="password"
                   type={showPassword ? 'text' : 'password'} required
                   value={formData.password} onChange={handleInputChange}
-                  style={{ ...inputWithIconStyle, paddingRight: 44 }}
+                  style={{ ...inputWithIcon, paddingRight: 46 }}
                   placeholder="Enter your password"
                   aria-label="Password"
-                  onFocus={e => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
-                  onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+                  onFocus={focusStyle} onBlur={blurStyle}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}
@@ -243,199 +288,225 @@ const Login = () => {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} style={{
-              width: '100%', background: loading ? '#9ca3af' : 'linear-gradient(135deg, #16a34a, #15803d)',
-              color: '#fff', padding: '12px 0', borderRadius: 9, border: 'none',
-              fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'opacity 0.15s', marginBottom: 18, fontFamily: 'inherit',
-              boxShadow: loading ? 'none' : '0 4px 14px rgba(22,163,74,0.3)',
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
+              <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#16a34a', fontWeight: 600, padding: 0, fontFamily: 'inherit' }}
+                onClick={() => setShowForgot(true)}>
+                Forgot password?
+              </button>
+            </div>
+
+            <button type="submit" id="login-submit" disabled={loading} style={{
+              width: '100%',
+              background: loading ? '#9ca3af' : 'linear-gradient(135deg, #16a34a, #15803d)',
+              color: '#fff', padding: '13px 0', borderRadius: 11, border: 'none',
+              fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'opacity 0.2s, transform 0.2s', marginBottom: 18, fontFamily: 'inherit',
+              boxShadow: loading ? 'none' : '0 6px 20px rgba(22,163,74,0.35)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              letterSpacing: '0.2px',
             }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.9'; }}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              onMouseEnter={e => { if (!loading) { e.currentTarget.style.opacity = '0.92'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'none'; }}
             >
-              {loading ? '⏳ Signing in...' : 'Sign In →'}
+              {loading ? '⏳ Signing in...' : <>Sign In <FaArrowRight style={{ fontSize: 12 }} /></>}
             </button>
           </form>
 
-          {/* Links */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#6b7280', fontWeight: 500, padding: 0, fontFamily: 'inherit' }}
-              onClick={() => setShowForgot(true)}>
-              Forgot password?
-            </button>
-            <a href="#register" style={{ fontSize: 13, color: '#16a34a', fontWeight: 600, textDecoration: 'none' }}
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: 13.5, color: '#9ca3af' }}>Don't have an account? </span>
+            <a href="#register" style={{ fontSize: 13.5, color: '#16a34a', fontWeight: 700, textDecoration: 'none' }}
               onClick={e => { e.preventDefault(); setShowRegister(true); }}>
-              Create account →
+              Create one free →
             </a>
           </div>
         </div>
 
-        {/* RIGHT: Visual Panel */}
-        <div className="hidden lg:flex" style={{
-          background: 'linear-gradient(160deg, #15803d 0%, #166534 60%, #14532d 100%)',
-          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '40px 36px', gap: 32, position: 'relative', overflow: 'hidden',
+        {/* RIGHT — Visual Panel ─────────────────────────────── */}
+        <div style={{
+          background: 'linear-gradient(155deg, #0f172a 0%, #1a2d1a 50%, #14532d 100%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '48px 36px', gap: 32, position: 'relative', overflow: 'hidden',
         }}>
-          {/* Background decoration */}
-          <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, background: 'rgba(255,255,255,0.06)', borderRadius: '50%' }} />
-          <div style={{ position: 'absolute', bottom: -60, left: -40, width: 220, height: 220, background: 'rgba(255,255,255,0.04)', borderRadius: '50%' }} />
+          {/* Background orbs */}
+          <div style={{ position: 'absolute', top: -60, right: -60, width: 260, height: 260, background: 'radial-gradient(circle, rgba(22,163,74,0.25) 0%, transparent 70%)', borderRadius: '50%' }} />
+          <div style={{ position: 'absolute', bottom: -80, left: -60, width: 300, height: 300, background: 'radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%)', borderRadius: '50%' }} />
+          <div style={{ position: 'absolute', top: '45%', left: '30%', width: 180, height: 180, background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)', borderRadius: '50%' }} />
 
-          <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-            {/* Icons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginBottom: 28 }}>
-              <div style={{ position: 'relative' }}>
-                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 16, width: 74, height: 74, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.2)' }}>
-                  <FaUser style={{ color: '#fff', fontSize: 32 }} />
+          <div style={{ textAlign: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
+            {/* Icon pair */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 28 }}>
+              {[
+                { bg: 'rgba(22,163,74,0.18)', border: 'rgba(22,163,74,0.3)', icon: <GiFarmTractor style={{ color: '#4ade80', fontSize: 28 }} />, badge: <GiPitchfork style={{ color: '#fff', fontSize: 11 }} />, badgeBg: '#16a34a' },
+                { bg: 'rgba(37,99,235,0.15)', border: 'rgba(37,99,235,0.25)', icon: <FaBuilding style={{ color: '#60a5fa', fontSize: 26 }} />, badge: <FaChartLine style={{ color: '#fff', fontSize: 10 }} />, badgeBg: '#2563eb' },
+              ].map((item, i) => (
+                <div key={i} style={{ position: 'relative' }}>
+                  <div style={{
+                    background: item.bg, border: `1.5px solid ${item.border}`,
+                    borderRadius: 18, width: 76, height: 76,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                  }}>
+                    {item.icon}
+                  </div>
+                  <div style={{
+                    position: 'absolute', bottom: -8, right: -8,
+                    background: item.badgeBg, borderRadius: 9,
+                    width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 3px 10px rgba(0,0,0,0.3)',
+                    border: '2px solid rgba(255,255,255,0.15)',
+                  }}>
+                    {item.badge}
+                  </div>
                 </div>
-                <div style={{ position: 'absolute', bottom: -7, right: -7, background: '#d97706', borderRadius: 9, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <GiPitchfork style={{ color: '#fff', fontSize: 12 }} />
-                </div>
-              </div>
-              <div style={{ position: 'relative' }}>
-                <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, width: 74, height: 74, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.15)' }}>
-                  <FaBuilding style={{ color: '#fff', fontSize: 30 }} />
-                </div>
-                <div style={{ position: 'absolute', bottom: -7, right: -7, background: '#2563eb', borderRadius: 9, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FaChartLine style={{ color: '#fff', fontSize: 11 }} />
-                </div>
-              </div>
+              ))}
             </div>
 
-            <h3 style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: '-0.3px' }}>AgriBudget</h3>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.65, maxWidth: 260, margin: '0 auto 28px' }}>
-              AI-powered agricultural finance and decision platform for modern farmers.
+            <h3 style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 10, letterSpacing: '-0.5px' }}>AgriBudget</h3>
+            <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, maxWidth: 260, margin: '0 auto 28px' }}>
+              AI-powered agricultural finance platform for modern farmers and agro-businesses.
             </p>
 
             {/* Feature checklist */}
-            <div style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, padding: '18px 20px', textAlign: 'left' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 14, padding: '20px 22px',
+              textAlign: 'left',
+              backdropFilter: 'blur(10px)',
+            }}>
               {[
-                'Track income & expenses',
-                'AI crop recommendations',
-                'Disease detection',
-                'Smart budget alerts',
-                'Marketplace access',
-                'Weather & market data',
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.85)', marginBottom: i < 5 ? 10 : 0 }}>
-                  <div style={{ width: 20, height: 20, background: 'rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FaCheck style={{ color: '#fff', fontSize: 9 }} />
+                ['💰', 'Track income & expenses'],
+                ['🤖', 'AI crop recommendations'],
+                ['🔬', 'Disease detection'],
+                ['🔔', 'Smart budget alerts'],
+                ['🛒', 'Marketplace access'],
+                ['🌤️', 'Weather & market data'],
+              ].map(([emoji, item], i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 11, fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: i < 5 ? 12 : 0 }}>
+                  <span style={{ fontSize: 15 }}>{emoji}</span>
+                  <div style={{ width: 18, height: 18, background: 'rgba(22,163,74,0.3)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FaCheck style={{ color: '#4ade80', fontSize: 8, fontWeight: 700 }} />
                   </div>
                   {item}
                 </div>
               ))}
             </div>
+
+            <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+              <FaShieldAlt style={{ color: '#4ade80', fontSize: 13 }} />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Bank-grade security · End-to-end encrypted</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ══ REGISTRATION MODAL ═══════════════════════════════ */}
+      {/* ══ REGISTRATION MODAL ══════════════════════════════════ */}
       {showRegister && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 18, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', width: '100%', maxWidth: 780, maxHeight: '90vh', overflowY: 'auto', position: 'relative' }} className="animate-fade-in-scale">
-            <div style={{ padding: '26px 32px 18px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{
+            background: '#fff', borderRadius: 22,
+            boxShadow: '0 32px 80px rgba(0,0,0,0.2)',
+            width: '100%', maxWidth: 800, maxHeight: '90vh', overflowY: 'auto',
+            position: 'relative', animation: 'slideUp 0.3s ease',
+          }}>
+            <div style={{ padding: '26px 32px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff', zIndex: 1, borderRadius: '22px 22px 0 0' }}>
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 800, color: '#111827', letterSpacing: '-0.3px' }}>
+                <h2 style={{ fontSize: 20, fontWeight: 900, color: '#111827', letterSpacing: '-0.4px' }}>
                   {userType === 'agro-business' ? '🏭 Create Agro-Business Account' : '🌱 Create Farmer Account'}
                 </h2>
-                <p style={{ fontSize: 12.5, color: '#9ca3af', marginTop: 3 }}>
-                  {userType === 'agro-business' ? 'Register your agricultural business' : 'Register as a farmer'}
+                <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3 }}>
+                  {userType === 'agro-business' ? 'Register your agricultural business' : 'Start your farming journey — it\'s free'}
                 </p>
               </div>
               <button onClick={() => setShowRegister(false)} aria-label="Close"
-                style={{ background: '#f3f4f6', border: 'none', borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 20, color: '#6b7280', transition: 'background 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#e5e7eb'}
+                onMouseLeave={e => e.currentTarget.style.background = '#f3f4f6'}
+              >×</button>
             </div>
 
-            <div style={{ padding: '24px 32px 32px' }}>
-              {/* User type toggle inside register */}
-              <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 10, padding: 4, gap: 4, marginBottom: 24 }}>
-                {[
-                  { id: 'farmer', label: '🌾 Farmer' },
-                  { id: 'agro-business', label: '🏭 Agro-Business' },
-                ].map(t => (
+            <div style={{ padding: '24px 32px 36px' }}>
+              <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 12, padding: 5, gap: 4, marginBottom: 26 }}>
+                {[{ id: 'farmer', label: '🌾 Farmer' }, { id: 'agro-business', label: '🏭 Agro-Business' }].map(t => (
                   <button key={t.id} type="button" onClick={() => setUserType(t.id)} style={{
-                    flex: 1, padding: '9px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 600,
+                    flex: 1, padding: '10px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 700,
                     background: userType === t.id ? '#fff' : 'transparent',
                     color: userType === t.id ? '#16a34a' : '#6b7280',
-                    boxShadow: userType === t.id ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                    transition: 'all 0.15s', fontFamily: 'inherit',
+                    boxShadow: userType === t.id ? '0 2px 8px rgba(0,0,0,0.10)' : 'none',
+                    transition: 'all 0.2s', fontFamily: 'inherit',
                   }}>{t.label}</button>
                 ))}
               </div>
 
-              {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 9, padding: '10px 14px', fontSize: 13, fontWeight: 600, marginBottom: 18 }}>⚠️ {error}</div>}
-              {successMessage && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: 9, padding: '10px 14px', fontSize: 13, fontWeight: 600, marginBottom: 18 }}>✓ {successMessage}</div>}
+              <AlertBox type="error" msg={error} />
+              <AlertBox type="success" msg={successMessage} />
 
               {userType === 'agro-business' ? (
                 <form onSubmit={handleRegister} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px 20px' }}>
                   {[
-                    { label: 'Business Name *', type: 'text', val: agroRegisterData.agroName, key: 'agroName', req: true },
-                    { label: 'Owner Name *', type: 'text', val: agroRegisterData.ownerName, key: 'ownerName', req: true },
-                    { label: 'Email *', type: 'email', val: agroRegisterData.email, key: 'email', req: true },
-                    { label: 'Phone / WhatsApp *', type: 'tel', val: agroRegisterData.phone, key: 'phone', req: true },
-                    { label: 'Password *', type: 'password', val: agroRegisterData.password, key: 'password', req: true },
-                    { label: 'Confirm Password *', type: 'password', val: agroRegisterData.confirmPassword, key: 'confirmPassword', req: true },
-                    { label: 'City *', type: 'text', val: agroRegisterData.city, key: 'city', req: true },
-                    { label: 'Location (link/coords)', type: 'text', val: agroRegisterData.location, key: 'location', req: false },
-                    { label: 'GST / License Number *', type: 'text', val: agroRegisterData.gstNumber, key: 'gstNumber', req: true },
-                    { label: 'Website / Social Links', type: 'text', val: agroRegisterData.socialLinks, key: 'socialLinks', req: false },
-                    { label: 'Working Hours (e.g. 09:00-18:00)', type: 'text', val: agroRegisterData.workingHours, key: 'workingHours', req: false },
+                    { label: 'Business Name *', type: 'text', val: agroRegisterData.agroName, key: 'agroName', req: true, ph: 'Your business name' },
+                    { label: 'Owner Name *', type: 'text', val: agroRegisterData.ownerName, key: 'ownerName', req: true, ph: 'Owner full name' },
+                    { label: 'Email *', type: 'email', val: agroRegisterData.email, key: 'email', req: true, ph: 'business@email.com' },
+                    { label: 'Phone / WhatsApp *', type: 'tel', val: agroRegisterData.phone, key: 'phone', req: true, ph: '+91 xxxxx xxxxx' },
+                    { label: 'Password *', type: 'password', val: agroRegisterData.password, key: 'password', req: true, ph: 'Create a strong password' },
+                    { label: 'Confirm Password *', type: 'password', val: agroRegisterData.confirmPassword, key: 'confirmPassword', req: true, ph: 'Repeat password' },
+                    { label: 'City *', type: 'text', val: agroRegisterData.city, key: 'city', req: true, ph: 'e.g. Ahmedabad' },
+                    { label: 'Location (link/coords)', type: 'text', val: agroRegisterData.location, key: 'location', req: false, ph: 'Google Maps link or coordinates' },
+                    { label: 'GST / License Number *', type: 'text', val: agroRegisterData.gstNumber, key: 'gstNumber', req: true, ph: 'GST number' },
+                    { label: 'Website / Social Links', type: 'text', val: agroRegisterData.socialLinks, key: 'socialLinks', req: false, ph: 'https://...' },
+                    { label: 'Working Hours', type: 'text', val: agroRegisterData.workingHours, key: 'workingHours', req: false, ph: 'e.g. 09:00-18:00' },
                   ].map(field => (
                     <div key={field.key}>
                       <label style={labelStyle}>{field.label}</label>
-                      <input type={field.type} value={field.val} required={field.req}
+                      <input type={field.type} value={field.val} required={field.req} placeholder={field.ph}
                         onChange={e => setAgroRegisterData({ ...agroRegisterData, [field.key]: e.target.value })}
-                        style={inputStyle}
-                        onFocus={e => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
-                        onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+                        style={inputBase} onFocus={focusStyle} onBlur={blurStyle}
                       />
-                      {field.key === 'password' && agroRegisterData.password && (
-                        <>
-                          <div style={{ height: 4, background: '#e5e7eb', borderRadius: 99, marginTop: 6 }}>
-                            <div style={{ height: 4, borderRadius: 99, background: strengthColor(passwordStrength(agroRegisterData.password)), width: `${(passwordStrength(agroRegisterData.password) / 4) * 100}%`, transition: 'width 0.2s' }} />
-                          </div>
-                          <div style={{ fontSize: 10.5, color: strengthColor(passwordStrength(agroRegisterData.password)), marginTop: 3, fontWeight: 600 }}>
-                            {strengthLabel(passwordStrength(agroRegisterData.password))} password
-                          </div>
-                        </>
-                      )}
+                      {field.key === 'password' && <PwStrength pwd={agroRegisterData.password} />}
                     </div>
                   ))}
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Address *</label>
-                    <input type="text" value={agroRegisterData.address} required onChange={e => setAgroRegisterData({ ...agroRegisterData, address: e.target.value })} style={inputStyle}
-                      onFocus={e => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
-                      onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+                    <input type="text" value={agroRegisterData.address} required placeholder="Full business address"
+                      onChange={e => setAgroRegisterData({ ...agroRegisterData, address: e.target.value })}
+                      style={inputBase} onFocus={focusStyle} onBlur={blurStyle}
                     />
                   </div>
                   <div>
                     <label style={labelStyle}>Agro Type</label>
-                    <select value={agroRegisterData.agroType} onChange={e => setAgroRegisterData({ ...agroRegisterData, agroType: e.target.value })} style={inputStyle}>
+                    <select value={agroRegisterData.agroType} onChange={e => setAgroRegisterData({ ...agroRegisterData, agroType: e.target.value })} style={inputBase}>
                       {['Supplier', 'Buyer', 'Machinery Provider', 'NGO', 'Other'].map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={labelStyle}>Services Offered (comma separated)</label>
-                    <input type="text" value={agroRegisterData.services.join(',')} onChange={e => setAgroRegisterData({ ...agroRegisterData, services: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} style={inputStyle} placeholder="e.g. Seeds, Fertilizers" />
+                    <label style={labelStyle}>Services Offered</label>
+                    <input type="text" value={agroRegisterData.services.join(',')} placeholder="e.g. Seeds, Fertilizers"
+                      onChange={e => setAgroRegisterData({ ...agroRegisterData, services: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                      style={inputBase} onFocus={focusStyle} onBlur={blurStyle}
+                    />
                   </div>
                   <div>
                     <label style={labelStyle}>Profile Logo</label>
-                    <input type="file" accept="image/*" style={{ ...inputStyle, padding: '8px 14px', cursor: 'pointer' }} onChange={e => { const f = e.target.files?.[0]; setAgroLogo(f); setAgroLogoPreview(f ? URL.createObjectURL(f) : null); }} />
-                    {agroLogoPreview && <img src={agroLogoPreview} alt="logo preview" style={{ marginTop: 8, width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '2px solid #dcfce7' }} />}
+                    <input type="file" accept="image/*" style={{ ...inputBase, padding: '8px 14px', cursor: 'pointer' }}
+                      onChange={e => { const f = e.target.files?.[0]; setAgroLogo(f); setAgroLogoPreview(f ? URL.createObjectURL(f) : null); }} />
+                    {agroLogoPreview && <img src={agroLogoPreview} alt="logo" style={{ marginTop: 8, width: 52, height: 52, objectFit: 'cover', borderRadius: 10, border: '2px solid #dcfce7' }} />}
                   </div>
                   <div>
                     <label style={labelStyle}>ID Proof (optional)</label>
-                    <input type="file" accept="image/*,.pdf" style={{ ...inputStyle, padding: '8px 14px', cursor: 'pointer' }} onChange={e => { const f = e.target.files?.[0]; setAgroIdProof(f); setAgroIdPreview(f ? URL.createObjectURL(f) : null); }} />
-                    {agroIdPreview && <div style={{ fontSize: 12, color: '#16a34a', marginTop: 6, fontWeight: 600 }}>✓ File selected</div>}
+                    <input type="file" accept="image/*,.pdf" style={{ ...inputBase, padding: '8px 14px', cursor: 'pointer' }}
+                      onChange={e => { const f = e.target.files?.[0]; setAgroIdProof(f); setAgroIdPreview(f ? URL.createObjectURL(f) : null); }} />
+                    {agroIdPreview && <div style={{ fontSize: 12, color: '#16a34a', marginTop: 6, fontWeight: 700 }}>✓ File selected</div>}
                   </div>
                   <div style={{ gridColumn: '1 / -1', paddingTop: 8 }}>
-                    <button type="submit" disabled={loading} style={{ width: '100%', background: loading ? '#9ca3af' : 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', padding: '12px 0', borderRadius: 9, border: 'none', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 12px rgba(22,163,74,0.25)' }}>
+                    <button type="submit" disabled={loading} style={{ width: '100%', background: loading ? '#9ca3af' : 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', padding: '13px 0', borderRadius: 11, border: 'none', fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(22,163,74,0.3)' }}>
                       {loading ? '⏳ Creating account...' : 'Create Business Account →'}
                     </button>
                   </div>
                 </form>
               ) : (
-                <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 440 }}>
+                <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 460 }}>
                   {[
                     { label: 'Full Name *', type: 'text', name: 'name', val: registerData.name, ph: 'Your full name' },
                     { label: 'Email Address *', type: 'email', name: 'email', val: registerData.email, ph: 'your@email.com' },
@@ -444,24 +515,14 @@ const Login = () => {
                   ].map(f => (
                     <div key={f.name}>
                       <label style={labelStyle}>{f.label}</label>
-                      <input type={f.type} name={f.name} value={f.val} onChange={handleRegisterInputChange} placeholder={f.ph} required style={inputStyle}
-                        onFocus={e => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
-                        onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+                      <input type={f.type} name={f.name} value={f.val} onChange={handleRegisterInputChange} placeholder={f.ph} required style={inputBase}
+                        onFocus={focusStyle} onBlur={blurStyle}
                       />
-                      {f.name === 'password' && registerData.password && (
-                        <>
-                          <div style={{ height: 4, background: '#e5e7eb', borderRadius: 99, marginTop: 6 }}>
-                            <div style={{ height: 4, borderRadius: 99, background: strengthColor(passwordStrength(registerData.password)), width: `${(passwordStrength(registerData.password) / 4) * 100}%`, transition: 'width 0.2s' }} />
-                          </div>
-                          <div style={{ fontSize: 10.5, color: strengthColor(passwordStrength(registerData.password)), marginTop: 3, fontWeight: 600 }}>
-                            {strengthLabel(passwordStrength(registerData.password))} password
-                          </div>
-                        </>
-                      )}
+                      {f.name === 'password' && <PwStrength pwd={registerData.password} />}
                     </div>
                   ))}
-                  <button type="submit" disabled={loading} style={{ background: loading ? '#9ca3af' : 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', padding: '12px 0', borderRadius: 9, border: 'none', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 6, fontFamily: 'inherit', boxShadow: '0 3px 12px rgba(22,163,74,0.25)' }}>
-                    {loading ? '⏳ Creating account...' : 'Create Account →'}
+                  <button type="submit" disabled={loading} style={{ background: loading ? '#9ca3af' : 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', padding: '13px 0', borderRadius: 11, border: 'none', fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4, fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(22,163,74,0.3)' }}>
+                    {loading ? '⏳ Creating account...' : 'Create Free Account →'}
                   </button>
                 </form>
               )}
@@ -470,54 +531,45 @@ const Login = () => {
         </div>
       )}
 
-      {/* ══ FORGOT PASSWORD MODAL ════════════════════════════ */}
+      {/* ══ FORGOT PASSWORD MODAL ═══════════════════════════════ */}
       {showForgot && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 18, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', width: '100%', maxWidth: 440, position: 'relative' }} className="animate-fade-in-scale">
-            <div style={{ padding: '24px 28px 18px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.2)', width: '100%', maxWidth: 460, animation: 'slideUp 0.3s ease' }}>
+            <div style={{ padding: '24px 28px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111827', letterSpacing: '-0.3px' }}>🔒 Reset Password</h3>
-                <p style={{ fontSize: 12.5, color: '#9ca3af', marginTop: 3 }}>Enter your email to receive a reset token</p>
+                <h3 style={{ fontSize: 19, fontWeight: 900, color: '#111827', letterSpacing: '-0.3px' }}>🔒 Reset Password</h3>
+                <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 3 }}>Enter your email to receive a reset token</p>
               </div>
               <button onClick={() => setShowForgot(false)} aria-label="Close"
-                style={{ background: '#f3f4f6', border: 'none', borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: 9, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 20, color: '#6b7280' }}>×</button>
             </div>
-            <div style={{ padding: '22px 28px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 9, padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>⚠️ {error}</div>}
-              {successMessage && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: 9, padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>✓ {successMessage}</div>}
+            <div style={{ padding: '24px 28px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <AlertBox type="error" msg={error} />
+              <AlertBox type="success" msg={successMessage} />
               <div>
                 <label style={labelStyle}>Registered Email</label>
-                <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} style={inputStyle} placeholder="you@example.com"
-                  onFocus={e => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
-                  onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
-                />
+                <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} style={inputBase} placeholder="you@example.com" onFocus={focusStyle} onBlur={blurStyle} />
               </div>
               <button onClick={async () => {
-                try { setError(''); setSuccessMessage(''); const res = await axios.post('/api/user/agro/forgot', { email: forgotEmail }); setSuccessMessage('Reset token sent.'); setResetToken(res.data.token); } catch (err) { setError(err.response?.data?.message || 'Failed'); }
-              }} style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', padding: '11px 0', borderRadius: 9, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                try { setError(''); setSuccessMessage(''); const res = await axios.post('/api/user/agro/forgot', { email: forgotEmail }); setSuccessMessage('Reset token sent to your email.'); setResetToken(res.data.token); } catch (err) { setError(err.response?.data?.message || 'Failed to send reset token'); }
+              }} style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', padding: '12px 0', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 12px rgba(22,163,74,0.3)' }}>
                 Send Reset Token
               </button>
-              {resetToken && <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 9, padding: '10px 14px', fontSize: 12, color: '#6b7280', wordBreak: 'break-all' }}>Token: {resetToken}</div>}
+              {resetToken && <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#6b7280', wordBreak: 'break-all', fontFamily: 'monospace' }}>Token: {resetToken}</div>}
               <div>
                 <label style={labelStyle}>New Password</label>
-                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle}
-                  onFocus={e => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
-                  onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
-                />
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputBase} onFocus={focusStyle} onBlur={blurStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Confirm New Password</label>
-                <input type="password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} style={inputStyle}
-                  onFocus={e => { e.target.style.borderColor = '#16a34a'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
-                  onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
-                />
+                <input type="password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} style={inputBase} onFocus={focusStyle} onBlur={blurStyle} />
               </div>
               <button onClick={async () => {
                 if (!resetToken) { setError('Reset token required'); return; }
                 if (!newPassword || newPassword !== confirmNewPassword) { setError('Passwords do not match'); return; }
-                try { setError(''); await axios.post('/api/user/agro/reset', { token: resetToken, password: newPassword }); setSuccessMessage('Password updated!'); setShowForgot(false); setResetToken(''); setNewPassword(''); setConfirmNewPassword(''); } catch (err) { setError(err.response?.data?.message || 'Failed'); }
-              }} style={{ background: '#d97706', color: '#fff', padding: '11px 0', borderRadius: 9, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Reset Password
+                try { setError(''); await axios.post('/api/user/agro/reset', { token: resetToken, password: newPassword }); setSuccessMessage('Password updated successfully!'); setShowForgot(false); setResetToken(''); setNewPassword(''); setConfirmNewPassword(''); } catch (err) { setError(err.response?.data?.message || 'Reset failed'); }
+              }} style={{ background: 'linear-gradient(135deg,#d97706,#b45309)', color: '#fff', padding: '12px 0', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Update Password
               </button>
             </div>
           </div>
