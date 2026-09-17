@@ -10,8 +10,8 @@ from typing import Optional, List
 import uvicorn
 import os
 
-from models.crop_recommender import CropRecommender
-from models.disease_detector import DiseaseDetector
+from ml_service.models.crop_recommender import CropRecommender
+from ml_service.models.disease_detector import DiseaseDetector
 
 app = FastAPI(
     title="AgriBudget ML Service",
