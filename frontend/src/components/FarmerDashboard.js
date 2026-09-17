@@ -4,6 +4,7 @@ import {
   FaFileAlt, FaUsers, FaSignOutAlt, FaCog,
   FaShoppingCart, FaRobot, FaBug, FaChartLine, FaBell, FaTh,
   FaBars, FaLeaf, FaArrowUp, FaArrowDown, FaTrash, FaSync,
+  FaGlobeAsia,
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { GiFarmTractor, GiWheat } from 'react-icons/gi';
@@ -18,6 +19,7 @@ import AgriAI from './AgriAI';
 import DiseaseDetection from './DiseaseDetection';
 import CropYieldPrediction from './CropYieldPrediction';
 import CropRecommendation from './CropRecommendation';
+import DigitalTwin from './DigitalTwin/DigitalTwin';
 
 /* ── Sidebar nav items ─────────────────────────────────── */
 const NAV_ITEMS = [
@@ -27,6 +29,7 @@ const NAV_ITEMS = [
   { key: 'costAnalysis', icon: <FaChartLine />,     label: 'Cost Analysis',    section: 'main' },
   { key: 'finTracker',   icon: <FaUsers />,         label: 'Finance Tracker',  section: 'main' },
   { key: 'reports',      icon: <FaFileAlt />,       label: 'Reports',          section: 'main' },
+  { key: 'digitalTwin',  icon: <FaGlobeAsia />,     label: 'Digital Twin',     section: 'main' },
   { key: 'agriAI',       icon: <FaRobot />,         label: 'AgriAI',           section: 'ai' },
   { key: 'disease',      icon: <FaBug />,           label: 'Disease Detect',   section: 'ai' },
   { key: 'yieldPred',    icon: <FaSeedling />,      label: 'Yield Prediction', section: 'ai' },
@@ -61,6 +64,7 @@ const FarmerDashboard = () => {
   const [showCropRecommendation,setShowCropRecommendation]= React.useState(false);
   const [showAgriAI,            setShowAgriAI]            = React.useState(false);
   const [showDiseaseDetection,  setShowDiseaseDetection]  = React.useState(false);
+  const [showDigitalTwin,       setShowDigitalTwin]       = React.useState(false);
   const [alerts,                setAlerts]                = React.useState([]);
   const [showNotifications,     setShowNotifications]     = React.useState(false);
   const [loadingAlerts,         setLoadingAlerts]         = React.useState(false);
@@ -211,6 +215,7 @@ const FarmerDashboard = () => {
     if (key === 'cropRec')      { setShowCropRecommendation(true); return; }
     if (key === 'agriAI')       { setShowAgriAI(true); return; }
     if (key === 'disease')      { setShowDiseaseDetection(true); return; }
+    if (key === 'digitalTwin')  { setShowDigitalTwin(true); return; }
   };
 
   /* ── shared input/label style ─────────────────────────── */
@@ -826,6 +831,11 @@ const FarmerDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Digital Twin Fullscreen Overlay */}
+      {showDigitalTwin && (
+        <DigitalTwin onClose={() => { setShowDigitalTwin(false); setActiveView('overview'); }} />
       )}
     </div>
   );

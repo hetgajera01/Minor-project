@@ -24,6 +24,8 @@ import Notification from "./Notification.js";
 import AIConversation    from "./AIConversation.js";
 import CropPrediction    from "./CropPrediction.js";
 import DiseasePrediction from "./DiseasePrediction.js";
+// ── Stage 3: Digital Twin Farm Config ─────────────────────────────────
+import FarmConfig from "./FarmConfig.js";
 import { chat as aiChat }                       from "../services/aiService.js";
 import { recommendCrop, predictYieldAndProfit } from "../services/cropMLService.js";
 import { detectDisease }                         from "../services/diseaseService.js";
@@ -3569,6 +3571,105 @@ router.get('/marketplace/recommended', async (req, res) => {
     const products = await getRecommendedProducts(crop, farmerId, Number(limit));
     res.json(products);
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Stage 3 – Digital Twin Farm Configuration Routes
+// ═══════════════════════════════════════════════════════════════════════
+
+// Derive cropType key and default color from a crop name string
+function deriveCropMeta(cropName) {
+  const name = (cropName || '').toLowerCase().trim();
+  const cropMap = {
+    wheat:     { cropType: 'wheat',     color: '#d4a847' },
+    rice:      { cropType: 'rice',      color: '#7db87d' },
+    paddy:     { cropType: 'rice',      color: '#7db87d' },
+    sugarcane: { cropType: 'sugarcane', color: '#8bc34a' },
+    cotton:    { cropType: 'cotton',    color: '#f5f5dc' },
+    maize:     { cropType: 'maize',     color: '#f59e0b' },
+    corn:      { cropType: 'maize',     color: '#f59e0b' },
+    soybean:   { cropType: 'soybean',   color: '#a3e635' },
+    tomato:    { cropType: 'tomato',    color: '#ef4444' },
+    groundnut: { cropType: 'groundnut', color: '#ca8a04' },
+    potato:    { cropType: 'potato',    color: '#a78bfa' },
+    onion:     { cropType: 'onion',     color: '#c084fc' },
+    chickpea:  { cropType: 'chickpea',  color: '#fbbf24' },
+    mustard:   { cropType: 'mustard',   color: '#facc15' },
+  };
+  return cropMap[name] || { cropType: 'generic', color: '#6ab04c' };
+}
+
+// GET /api/user/farm-config?email=
+router.get('/farm-config', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ message: 'email required' });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const config = await FarmConfig.findOne({ user: user._id });
+    if (!config) return res.status(404).json({ message: 'No farm config found' });
+    res.json(config);
+  } catch (err) {
+    console.error('farm-config GET error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/user/farm-config  (create or update – upsert by user)
+router.post('/farm-config', async (req, res) => {
+  try {
+    const { email, totalArea, zones } = req.body;
+    if (!email) return res.status(400).json({ message: 'email required' });
+    if (!totalArea || totalArea <= 0) return res.status(400).json({ message: 'totalArea must be > 0' });
+    if (!Array.isArray(zones) || zones.length === 0) return res.status(400).json({ message: 'At least 1 zone required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Validate zone areas
+    for (const z of zones) {
+      if (!z.name || !z.name.trim()) return res.status(400).json({ message: 'All zones must have a name' });
+      if (!z.crop || !z.crop.trim()) return res.status(400).json({ message: 'All zones must have a crop' });
+      if (!z.area || z.area <= 0) return res.status(400).json({ message: `Zone "${z.name}" area must be > 0` });
+    }
+    const allocatedArea = zones.reduce((s, z) => s + Number(z.area), 0);
+    if (allocatedArea > totalArea) {
+      return res.status(400).json({ message: `Allocated area (${allocatedArea.toFixed(2)} ac) exceeds total farm area (${totalArea} ac)` });
+    }
+
+    // Enrich zones with derived cropType + color
+    const enrichedZones = zones.map(z => ({
+      ...z,
+      area:   Number(z.area),
+      ...deriveCropMeta(z.crop),
+    }));
+
+    const config = await FarmConfig.findOneAndUpdate(
+      { user: user._id },
+      { user: user._id, totalArea: Number(totalArea), zones: enrichedZones },
+      { upsert: true, new: true, runValidators: true }
+    );
+
+    res.json({ message: 'Farm config saved', config });
+  } catch (err) {
+    console.error('farm-config POST error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/user/farm-config?email=  (reset farm)
+router.delete('/farm-config', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ message: 'email required' });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    await FarmConfig.findOneAndDelete({ user: user._id });
+    res.json({ message: 'Farm config deleted' });
+  } catch (err) {
+    console.error('farm-config DELETE error:', err);
     res.status(500).json({ message: err.message });
   }
 });
