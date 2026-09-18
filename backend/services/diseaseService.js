@@ -15,19 +15,22 @@ const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:8000";
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 // ── Gemini Vision Setup ─────────────────────────────────────────────────────
-let genAI = null;
-let visionModel = null;
+// Model priority (verified available on this API key)
+const GEMINI_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-flash-latest",
+  "gemini-pro-latest",
+];
 
-function getVisionModel() {
+let genAI = null;
+
+function getGenAI() {
   if (!GEMINI_KEY) {
     console.warn('[diseaseService] GEMINI_API_KEY not set — disease detection will use fallback');
     return null;
   }
-  if (!genAI) {
-    genAI = new GoogleGenerativeAI(GEMINI_KEY);
-    visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  }
-  return visionModel;
+  if (!genAI) genAI = new GoogleGenerativeAI(GEMINI_KEY);
+  return genAI;
 }
 
 // ── Disease knowledge base (for enriching Gemini output) ──────────────────
@@ -124,55 +127,65 @@ Rules:
 - confidence should reflect how clearly you can see the disease (higher = clearer image + more obvious disease)`;
 
 async function geminiVisionDetect(imagePath) {
-  const model = getVisionModel();
-  if (!model) return null;
+  const ai = getGenAI();
+  if (!ai) return null;
 
-  try {
-    const imageBytes = fs.readFileSync(imagePath);
-    const base64Image = imageBytes.toString("base64");
-    const ext = imagePath.split(".").pop().toLowerCase();
-    const mimeType = ext === "jpg" || ext === "jpeg" ? "image/jpeg"
-                   : ext === "png" ? "image/png"
-                   : ext === "webp" ? "image/webp"
-                   : "image/jpeg";
+  const imageBytes = fs.readFileSync(imagePath);
+  const base64Image = imageBytes.toString("base64");
+  const ext = imagePath.split(".").pop().toLowerCase();
+  const mimeType = ext === "jpg" || ext === "jpeg" ? "image/jpeg"
+                 : ext === "png" ? "image/png"
+                 : ext === "webp" ? "image/webp"
+                 : "image/jpeg";
 
-    const result = await model.generateContent({
-      contents: [{
-        role: "user",
-        parts: [
-          { text: DISEASE_DETECTION_PROMPT },
-          { inlineData: { data: base64Image, mimeType } },
-        ],
-      }],
-    });
+  for (const modelName of GEMINI_MODELS) {
+    try {
+      console.log(`[diseaseService] Trying model: ${modelName}`);
+      const model = ai.getGenerativeModel({ model: modelName });
 
-    const text = result.response.text().trim();
+      const result = await model.generateContent({
+        contents: [{
+          role: "user",
+          parts: [
+            { text: DISEASE_DETECTION_PROMPT },
+            { inlineData: { data: base64Image, mimeType } },
+          ],
+        }],
+      });
 
-    // Extract JSON from response (handle markdown code blocks)
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON in Gemini response");
+      const text = result.response.text().trim();
 
-    const parsed = JSON.parse(jsonMatch[0]);
+      // Extract JSON from response (handle markdown code blocks)
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON in Gemini response");
 
-    // Enrich with local disease DB data if we have it
-    const dbEntry = DISEASE_DB[parsed.disease];
-    if (dbEntry) {
-      parsed.symptoms  = parsed.symptoms?.length  ? parsed.symptoms  : dbEntry.symptoms;
-      parsed.causes    = parsed.causes?.length    ? parsed.causes    : dbEntry.causes;
-      parsed.prevention= parsed.prevention?.length? parsed.prevention: dbEntry.prevention;
-      parsed.treatment = parsed.treatment?.length ? parsed.treatment : dbEntry.treatment;
-      parsed.nextSteps = parsed.nextSteps?.length ? parsed.nextSteps : dbEntry.nextSteps;
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // Enrich with local disease DB data if we have it
+      const dbEntry = DISEASE_DB[parsed.disease];
+      if (dbEntry) {
+        parsed.symptoms  = parsed.symptoms?.length  ? parsed.symptoms  : dbEntry.symptoms;
+        parsed.causes    = parsed.causes?.length    ? parsed.causes    : dbEntry.causes;
+        parsed.prevention= parsed.prevention?.length? parsed.prevention: dbEntry.prevention;
+        parsed.treatment = parsed.treatment?.length ? parsed.treatment : dbEntry.treatment;
+        parsed.nextSteps = parsed.nextSteps?.length ? parsed.nextSteps : dbEntry.nextSteps;
+      }
+
+      console.log(`[diseaseService] ✅ Success with model: ${modelName}`);
+      return {
+        ...parsed,
+        modelUsed: modelName,
+        source: "gemini-vision",
+        disclaimer: "AI-assisted analysis. Always confirm with your local agricultural extension officer (KVK) before taking action.",
+      };
+    } catch (err) {
+      console.warn(`[diseaseService] Model ${modelName} failed: ${err.message}`);
+      // Continue to next model in chain
     }
-
-    return {
-      ...parsed,
-      source: "gemini-vision",
-      disclaimer: "AI-assisted analysis. Always confirm with your local agricultural extension officer (KVK) before taking action.",
-    };
-  } catch (err) {
-    console.error("[diseaseService] Gemini Vision error:", err.message);
-    return null;
   }
+
+  console.error("[diseaseService] All Gemini models exhausted — falling back");
+  return null;
 }
 
 // ── Python ML Service Fallback ──────────────────────────────────────────────

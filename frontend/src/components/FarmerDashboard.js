@@ -20,6 +20,7 @@ import DiseaseDetection from './DiseaseDetection';
 import CropYieldPrediction from './CropYieldPrediction';
 import CropRecommendation from './CropRecommendation';
 import DigitalTwin from './DigitalTwin/DigitalTwin';
+import SolarEnergyPanel from './SolarEnergyPanel';
 
 /* ── Sidebar nav items ─────────────────────────────────── */
 const NAV_ITEMS = [
@@ -635,6 +636,11 @@ const FarmerDashboard = () => {
               </div>
             );
           })()}
+
+          {/* ══ SOLAR ENERGY PANEL ══════════════════════════════ */}
+          <div style={{ marginTop: 24 }}>
+            <SolarEnergyPanel />
+          </div>
 
         </main>
 
