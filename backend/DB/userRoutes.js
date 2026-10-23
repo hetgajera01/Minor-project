@@ -3390,13 +3390,15 @@ router.post('/crop-recommend', async (req, res) => {
           inputs,
           result: {
             score:       result.recommended.score,
-            confidence:  result.recommended.confidence,
+            suitability: result.recommended.suitability,
             description: result.recommended.description,
             yieldEst:    result.recommended.yieldTons,
             landArea:    inputs.landArea,
             costEst:     result.recommended.costEst,
             revenueEst:  result.recommended.revenueEst,
             profitEst:   result.recommended.profitEst,
+            pricePerQuintal: result.recommended.pricePerQuintal,
+            priceSource:     result.recommended.priceSource,
             alternatives: result.alternatives,
           },
         });
@@ -3420,7 +3422,8 @@ router.post('/crop/yield-predict', async (req, res) => {
     const { email, crop, landArea, season, additionalCosts = {} } = req.body;
     if (!crop) return res.status(400).json({ message: 'crop is required' });
 
-    // Pull existing expenses from DB to integrate with prediction
+    // Pull existing expenses from DB — informational only, NOT added to predictedCost
+    // (adding them would double-count costs already tracked in the finance module)
     let existingExpenses = 0;
     let userId = null;
     if (email) {
@@ -3434,8 +3437,11 @@ router.post('/crop/yield-predict', async (req, res) => {
 
     const result = await predictYieldAndProfit({
       crop, landArea: Number(landArea) || 1, season,
-      existingExpenses, additionalCosts,
+      // existingExpenses intentionally excluded from cost calculation
+      additionalCosts,
     });
+    // Attach for UI display only
+    result.existingExpensesRecorded = existingExpenses;
 
     // Save prediction
     if (userId) {

@@ -5,6 +5,9 @@ import guTranslations from '../translations/gu';
 
 const LanguageContext = createContext();
 
+// Custom event name for language changes
+const LANG_CHANGE_EVENT = 'agri-lang-change';
+
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
@@ -16,17 +19,15 @@ export const useLanguage = () => {
 export const LanguageProvider = ({ children }) => {
   // Get language from localStorage or default to 'en'
   const getInitialLanguage = () => {
-    // First check localStorage for saved theme
-    const savedTheme = localStorage.getItem('agriTheme');
-    if (savedTheme) {
-      try {
+    try {
+      const savedTheme = localStorage.getItem('agriTheme');
+      if (savedTheme) {
         const parsed = JSON.parse(savedTheme);
         if (parsed.language) return parsed.language;
-      } catch (e) {
-        console.error('Error parsing saved theme:', e);
       }
+    } catch (e) {
+      console.error('Error parsing saved theme:', e);
     }
-    // Check data-lang attribute
     const dataLang = document.documentElement.getAttribute('data-lang');
     if (dataLang) return dataLang;
     return 'en';
@@ -40,48 +41,62 @@ export const LanguageProvider = ({ children }) => {
     gu: guTranslations,
   };
 
+  /**
+   * Safe translation function: returns translated string or English fallback or the key itself.
+   * Never crashes on a missing key.
+   */
   const t = (key) => {
-    return translations[language]?.[key] || translations['en'][key] || key;
+    return translations[language]?.[key] || translations['en']?.[key] || key;
   };
 
   const changeLanguage = (newLang) => {
+    if (!translations[newLang]) {
+      console.warn(`Language "${newLang}" not supported, falling back to "en"`);
+      newLang = 'en';
+    }
     setLanguage(newLang);
-    // Update localStorage
-    const savedTheme = localStorage.getItem('agriTheme');
-    if (savedTheme) {
-      try {
+
+    // Persist to localStorage
+    try {
+      const savedTheme = localStorage.getItem('agriTheme');
+      if (savedTheme) {
         const parsed = JSON.parse(savedTheme);
         parsed.language = newLang;
         localStorage.setItem('agriTheme', JSON.stringify(parsed));
-      } catch (e) {
-        console.error('Error updating theme in localStorage:', e);
+      } else {
+        localStorage.setItem('agriTheme', JSON.stringify({ language: newLang }));
       }
-    } else {
-      localStorage.setItem('agriTheme', JSON.stringify({ language: newLang }));
+    } catch (e) {
+      console.error('Error updating theme in localStorage:', e);
     }
+
     // Update data-lang attribute
     document.documentElement.setAttribute('data-lang', newLang);
+
+    // Dispatch custom event so other tabs/windows can react
+    try {
+      window.dispatchEvent(new CustomEvent(LANG_CHANGE_EVENT, { detail: { language: newLang } }));
+    } catch (e) {
+      // Ignore event dispatch errors
+    }
   };
 
-  // Listen for language changes from Settings component
+  // Listen for language changes from other components / tabs
   useEffect(() => {
-    const handleLanguageChange = () => {
-      const dataLang = document.documentElement.getAttribute('data-lang');
-      if (dataLang && dataLang !== language) {
-        setLanguage(dataLang);
+    const handleCustomLangChange = (e) => {
+      if (e.detail?.language && e.detail.language !== language) {
+        setLanguage(e.detail.language);
       }
     };
 
-    // Check periodically for language changes
-    const interval = setInterval(handleLanguageChange, 500);
-    
-    // Also listen for storage changes
+    // Cross-tab: listen for storage changes
     const handleStorageChange = (e) => {
       if (e.key === 'agriTheme') {
         try {
           const parsed = JSON.parse(e.newValue);
-          if (parsed && parsed.language && parsed.language !== language) {
+          if (parsed?.language && parsed.language !== language) {
             setLanguage(parsed.language);
+            document.documentElement.setAttribute('data-lang', parsed.language);
           }
         } catch (err) {
           console.error('Error parsing storage change:', err);
@@ -89,10 +104,11 @@ export const LanguageProvider = ({ children }) => {
       }
     };
 
+    window.addEventListener(LANG_CHANGE_EVENT, handleCustomLangChange);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      clearInterval(interval);
+      window.removeEventListener(LANG_CHANGE_EVENT, handleCustomLangChange);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [language]);
@@ -119,4 +135,3 @@ export const LanguageProvider = ({ children }) => {
     </LanguageContext.Provider>
   );
 };
-

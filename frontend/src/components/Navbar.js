@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaBars, FaTimes, FaLeaf, FaUserCircle, FaBell, FaChevronDown } from 'react-icons/fa';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,6 +10,7 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('userName'));
   const userName = localStorage.getItem('userName');
   const role = localStorage.getItem('role');
+  const { t } = useLanguage();
 
   useEffect(() => {
     const handleStorage = () => setIsLoggedIn(!!localStorage.getItem('userName'));
@@ -37,8 +39,8 @@ const Navbar = () => {
   );
 
   const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/about', label: 'About' },
+    { to: '/', label: t('home') },
+    { to: '/about', label: t('about') },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -111,7 +113,7 @@ const Navbar = () => {
                   onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
                   onMouseLeave={e => e.currentTarget.style.background = '#fff'}
                 >
-                  Sign In
+                  {t('signIn')}
                 </Link>
                 <Link
                   to="/login"
@@ -125,7 +127,7 @@ const Navbar = () => {
                   onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
                   onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                 >
-                  Get Started →
+                  {t('getStarted')}
                 </Link>
               </div>
             ) : (
@@ -141,7 +143,7 @@ const Navbar = () => {
                   onMouseEnter={e => e.currentTarget.style.background = '#dcfce7'}
                   onMouseLeave={e => e.currentTarget.style.background = '#f0fdf4'}
                 >
-                  Dashboard
+                  {t('dashboard')}
                 </Link>
 
                 {/* User badge */}
@@ -209,22 +211,22 @@ const Navbar = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
                 <Link to="/login" onClick={() => setIsOpen(false)}
                   style={{ display: 'block', textAlign: 'center', padding: '10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 14, fontWeight: 500, color: '#374151', textDecoration: 'none' }}>
-                  Sign In
+                  {t('signIn')}
                 </Link>
                 <Link to="/login" onClick={() => setIsOpen(false)}
                   style={{ display: 'block', textAlign: 'center', padding: '10px', borderRadius: 8, background: '#16a34a', fontSize: 14, fontWeight: 600, color: '#fff', textDecoration: 'none' }}>
-                  Get Started
+                  {t('getStarted')}
                 </Link>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
                 <Link to={role === 'agro' ? '/agro-dashboard' : '/farmer-dashboard'} onClick={() => setIsOpen(false)}
                   style={{ display: 'block', textAlign: 'center', padding: '10px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: 14, fontWeight: 600, color: '#15803d', textDecoration: 'none' }}>
-                  Go to Dashboard
+                  {t('goToDashboard')}
                 </Link>
                 <button onClick={handleLogout}
                   style={{ background: '#fff', border: '1px solid #fecaca', borderRadius: 8, padding: '10px', fontSize: 14, fontWeight: 600, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  Sign Out
+                  {t('signOut')}
                 </button>
               </div>
             )}

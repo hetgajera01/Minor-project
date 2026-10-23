@@ -21,26 +21,29 @@ import CropYieldPrediction from './CropYieldPrediction';
 import CropRecommendation from './CropRecommendation';
 import DigitalTwin from './DigitalTwin/DigitalTwin';
 import SolarEnergyPanel from './SolarEnergyPanel';
+import { useLanguage } from '../contexts/LanguageContext';
 
-/* ── Sidebar nav items ─────────────────────────────────── */
-const NAV_ITEMS = [
-  { key: 'overview',     icon: <FaTh />,           label: 'Dashboard',        section: 'main' },
-  { key: 'finance',      icon: <FaMoneyBillWave />, label: 'Finance',          section: 'main' },
-  { key: 'cropTracker',  icon: <GiWheat />,         label: 'Crop Tracker',     section: 'main' },
-  { key: 'costAnalysis', icon: <FaChartLine />,     label: 'Cost Analysis',    section: 'main' },
-  { key: 'finTracker',   icon: <FaUsers />,         label: 'Finance Tracker',  section: 'main' },
-  { key: 'reports',      icon: <FaFileAlt />,       label: 'Reports',          section: 'main' },
-  { key: 'digitalTwin',  icon: <FaGlobeAsia />,     label: 'Digital Twin',     section: 'main' },
-  { key: 'agriAI',       icon: <FaRobot />,         label: 'AgriAI',           section: 'ai' },
-  { key: 'disease',      icon: <FaBug />,           label: 'Disease Detect',   section: 'ai' },
-  { key: 'yieldPred',    icon: <FaSeedling />,      label: 'Yield Prediction', section: 'ai' },
-  { key: 'cropRec',      icon: <FaLeaf />,          label: 'Crop Recommend',   section: 'ai' },
+/* ── Sidebar nav items (translated) ───────────────────── */
+const getNavItems = (t) => [
+  { key: 'overview',     icon: <FaTh />,           label: t('dashboard'),       section: 'main' },
+  { key: 'finance',      icon: <FaMoneyBillWave />, label: t('finance'),         section: 'main' },
+  { key: 'cropTracker',  icon: <GiWheat />,         label: t('cropTracker'),     section: 'main' },
+  { key: 'costAnalysis', icon: <FaChartLine />,     label: t('costAnalysis'),    section: 'main' },
+  { key: 'finTracker',   icon: <FaUsers />,         label: t('financeTracker'),  section: 'main' },
+  { key: 'reports',      icon: <FaFileAlt />,       label: t('reports'),         section: 'main' },
+  { key: 'digitalTwin',  icon: <FaGlobeAsia />,     label: t('digitalTwin'),     section: 'main' },
+  { key: 'agriAI',       icon: <FaRobot />,         label: t('agriAI'),          section: 'ai' },
+  { key: 'disease',      icon: <FaBug />,           label: t('diseaseDetect'),   section: 'ai' },
+  { key: 'yieldPred',    icon: <FaSeedling />,      label: t('yieldPrediction'), section: 'ai' },
+  { key: 'cropRec',      icon: <FaLeaf />,          label: t('cropRecommend'),   section: 'ai' },
 ];
 
 const FarmerDashboard = () => {
   const userName  = localStorage.getItem('userName');
   const userEmail = localStorage.getItem('userEmail');
   const navigate  = useNavigate();
+  const { t }     = useLanguage();
+  const NAV_ITEMS = getNavItems(t);
 
   /* ── sidebar state ────────────────────────────────────── */
   const [sidebarOpen,     setSidebarOpen]     = React.useState(false);
@@ -263,7 +266,7 @@ const FarmerDashboard = () => {
         {/* Nav */}
         <nav className="ab-sidebar-nav">
           {/* Main Section */}
-          <div className="ab-sidebar-section-label">Main</div>
+          <div className="ab-sidebar-section-label">{t('mainSection')}</div>
           {NAV_ITEMS.filter(i => i.section === 'main').map(item => (
             <button
               key={item.key}
@@ -276,7 +279,7 @@ const FarmerDashboard = () => {
           ))}
 
           {/* AI Section */}
-          <div className="ab-sidebar-section-label" style={{ marginTop: 8 }}>AI & ML Tools</div>
+          <div className="ab-sidebar-section-label" style={{ marginTop: 8 }}>{t('aimlTools')}</div>
           {NAV_ITEMS.filter(i => i.section === 'ai').map(item => (
             <button
               key={item.key}
@@ -294,15 +297,15 @@ const FarmerDashboard = () => {
         <div className="ab-sidebar-footer">
           <button className="ab-sidebar-item" onClick={() => navigate('/marketplace')} style={{ color: '#2563eb' }}>
             <span className="ab-sidebar-icon"><FaShoppingCart /></span>
-            <span className="ab-sidebar-label">Marketplace</span>
+            <span className="ab-sidebar-label">{t('marketplace')}</span>
           </button>
           <button className="ab-sidebar-item" onClick={() => navigate('/settings')}>
             <span className="ab-sidebar-icon"><FaCog /></span>
-            <span className="ab-sidebar-label">Settings</span>
+            <span className="ab-sidebar-label">{t('settings')}</span>
           </button>
           <button className="ab-sidebar-item" onClick={handleLogout} style={{ color: '#dc2626' }}>
             <span className="ab-sidebar-icon"><FaSignOutAlt /></span>
-            <span className="ab-sidebar-label">Sign Out</span>
+            <span className="ab-sidebar-label">{t('signOut')}</span>
           </button>
         </div>
       </aside>

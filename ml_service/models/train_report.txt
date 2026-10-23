@@ -1,0 +1,66 @@
+
+[Data] 1099 samples, 22 classes
+[Data] Feature names: ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+
+[Split] Train: 769, Val: 165, Test: 165
+
+[Baseline] Most-frequent class accuracy on test set: 8.5%
+
+[RandomForest] Val accuracy:  100.0%
+[RandomForest] Test accuracy: 100.0%  (HELD-OUT)
+[RandomForest] Test macro-F1: 100.0%  (HELD-OUT)
+
+[Classification Report — TEST SET]
+              precision    recall  f1-score   support
+
+       apple       1.00      1.00      1.00         2
+      banana       1.00      1.00      1.00         4
+   blackgram       1.00      1.00      1.00         9
+    chickpea       1.00      1.00      1.00        12
+     coconut       1.00      1.00      1.00         3
+      coffee       1.00      1.00      1.00         2
+      cotton       1.00      1.00      1.00         4
+      grapes       1.00      1.00      1.00         2
+        jute       1.00      1.00      1.00         7
+ kidneybeans       1.00      1.00      1.00        12
+      lentil       1.00      1.00      1.00         7
+       maize       1.00      1.00      1.00        13
+       mango       1.00      1.00      1.00         7
+   mothbeans       1.00      1.00      1.00        11
+    mungbean       1.00      1.00      1.00        13
+   muskmelon       1.00      1.00      1.00         5
+      orange       1.00      1.00      1.00         2
+      papaya       1.00      1.00      1.00        11
+  pigeonpeas       1.00      1.00      1.00        13
+ pomegranate       1.00      1.00      1.00        11
+        rice       1.00      1.00      1.00        14
+  watermelon       1.00      1.00      1.00         1
+
+    accuracy                           1.00       165
+   macro avg       1.00      1.00      1.00       165
+weighted avg       1.00      1.00      1.00       165
+
+[Confusion Matrix — TEST SET]
+Classes (in order): [np.str_('apple'), np.str_('banana'), np.str_('blackgram'), np.str_('chickpea'), np.str_('coconut'), np.str_('coffee'), np.str_('cotton'), np.str_('grapes'), np.str_('jute'), np.str_('kidneybeans'), np.str_('lentil'), np.str_('maize'), np.str_('mango'), np.str_('mothbeans'), np.str_('mungbean'), np.str_('muskmelon'), np.str_('orange'), np.str_('papaya'), np.str_('pigeonpeas'), np.str_('pomegranate'), np.str_('rice'), np.str_('watermelon')]
+[[ 2  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  4  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  9  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0 12  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  3  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  2  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  4  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  2  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  7  0  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0 12  0  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  7  0  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0 13  0  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  7  0  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0 11  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0 13  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  5  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  2  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0 11  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0 13  0  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0 11  0  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0 14  0]
+ [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  1]]

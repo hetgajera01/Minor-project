@@ -4,6 +4,7 @@ import axios from 'axios';
 import NotificationCenter from './NotificationCenter';
 import Analytics from './Analytics';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Toast notification component
 const Toast = ({ msg, type, onClose }) => {
@@ -30,6 +31,7 @@ const AgroDashboard = () => {
   const agroEmail = localStorage.getItem('agroEmail');
   const agroId = localStorage.getItem('agroId');
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [, setLoading] = React.useState(false);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('dashboard');
@@ -499,12 +501,12 @@ const AgroDashboard = () => {
         <nav className="ab-sidebar-nav">
           <div className="ab-sidebar-section-label">Business</div>
           {[
-            { icon: <FaChartLine />, label: 'Dashboard',      tab: 'dashboard' },
-            { icon: <FaBoxOpen />,   label: 'My Products',    tab: 'products' },
-            { icon: <FaShoppingCart />, label: 'Orders',      tab: 'orders' },
-            { icon: <FaEnvelope />,  label: 'Requests',       tab: 'requests' },
-            { icon: <FaChartBar />,  label: 'Analytics',      tab: 'analytics' },
-            { icon: <FaBell />,      label: 'Notifications',  tab: 'notifications' },
+            { icon: <FaChartLine />, label: t('dashboard'),      tab: 'dashboard' },
+            { icon: <FaBoxOpen />,   label: t('products'),       tab: 'products' },
+            { icon: <FaShoppingCart />, label: t('orders'),      tab: 'orders' },
+            { icon: <FaEnvelope />,  label: t('requestsTab'),    tab: 'requests' },
+            { icon: <FaChartBar />,  label: t('analytics'),      tab: 'analytics' },
+            { icon: <FaBell />,      label: t('notifications'),  tab: 'notifications' },
           ].map((item, idx) => (
             <button
               key={idx}
@@ -519,7 +521,7 @@ const AgroDashboard = () => {
         <div className="ab-sidebar-footer">
           <button className="ab-sidebar-item" onClick={() => navigate('/settings')}>
             <span className="ab-sidebar-icon"><FaCog /></span>
-            <span className="ab-sidebar-label">Settings</span>
+            <span className="ab-sidebar-label">{t('settings')}</span>
           </button>
           <button
             className="ab-sidebar-item"
@@ -533,7 +535,7 @@ const AgroDashboard = () => {
             }}
           >
             <span className="ab-sidebar-icon"><FaSignOutAlt /></span>
-            <span className="ab-sidebar-label">Sign Out</span>
+            <span className="ab-sidebar-label">{t('signOut')}</span>
           </button>
         </div>
       </aside>

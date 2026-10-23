@@ -1,0 +1,57 @@
+{
+  "model_version": "2.0",
+  "trained_at": "2026-10-23T13:48:45.265875Z",
+  "dataset": "Kaggle Crop Recommendation Dataset (CC0) \u2014 embedded/expanded",
+  "dataset_url": "https://www.kaggle.com/datasets/atharvaingle/crop-recommendation-dataset",
+  "features": [
+    "N",
+    "P",
+    "K",
+    "temperature",
+    "humidity",
+    "ph",
+    "rainfall"
+  ],
+  "algorithm": "RandomForestClassifier (n_estimators=300, sklearn Pipeline with StandardScaler)",
+  "split": "Stratified 70/15/15 (train/val/test)",
+  "evaluation_note": "All metrics computed on held-out test set ONLY. Train data never used for evaluation.",
+  "metrics": {
+    "baseline_test_accuracy": 0.0848,
+    "rf_val_accuracy": 1.0,
+    "rf_test_accuracy": 1.0,
+    "rf_test_macro_f1": 1.0,
+    "n_train": 934,
+    "n_test": 165,
+    "n_classes": 22,
+    "classes": [
+      "apple",
+      "banana",
+      "blackgram",
+      "chickpea",
+      "coconut",
+      "coffee",
+      "cotton",
+      "grapes",
+      "jute",
+      "kidneybeans",
+      "lentil",
+      "maize",
+      "mango",
+      "mothbeans",
+      "mungbean",
+      "muskmelon",
+      "orange",
+      "papaya",
+      "pigeonpeas",
+      "pomegranate",
+      "rice",
+      "watermelon"
+    ]
+  },
+  "limitations": [
+    "Location (state) and season are NOT model features \u2014 this dataset does not include them.",
+    "Predictions are soil+weather suitability scores, NOT calibrated success probabilities.",
+    "The dataset represents average Indian agronomic conditions, not Gujarat-specific data.",
+    "Financial estimates are reference values, not ML predictions."
+  ]
+}
