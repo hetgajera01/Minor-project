@@ -177,6 +177,18 @@ The application is ready for the following collections:
 - Mobile-first approach
 - Accessible design
 
+## Deploy frontend and backend to Vercel
+
+Deploy this repository as two Vercel projects:
+
+1. Import the GitHub repository into Vercel and create the frontend project with **Root Directory** set to `frontend`. Use the default Create React App build settings.
+2. In the frontend project's **Settings → Environment Variables**, set `REACT_APP_API_URL` to the backend deployment URL followed by `/api`, for example `https://your-backend.vercel.app/api`. Redeploy after setting it.
+3. Import the same repository again as a second Vercel project. Set **Root Directory** to `backend` and deploy the Express app.
+4. Add `MONGO_URI` to the backend project's environment variables. Add `GEMINI_API_KEY` if Gemini features are needed. Redeploy after saving the variables.
+5. Test `https://your-backend.vercel.app/health`, then test the frontend and its API features.
+
+Vercel runs the Node.js Express API as a serverless function; it does not run the root Dockerfile or the Python ML service. Host `ml_service` separately and set `ML_SERVICE_URL` on the backend if those ML endpoints are needed. Backend uploads on Vercel use temporary storage and are not persistent; use object storage such as Vercel Blob for files that must remain available.
+
 ## 🚀 Next Steps
 
 1. **Database Models**: Create Mongoose schemas
