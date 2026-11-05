@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { 
   FaChartBar, 
   FaChartLine, 
@@ -7,11 +7,15 @@ import {
   FaToggleOff,
   FaRupeeSign,
   FaBox,
-  FaCalendarAlt,
-  FaFilter
+  FaCalendarAlt
 } from 'react-icons/fa';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
+
+const MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
 
 const MonthlySalesGraph = ({ agroId, agroEmail, dateRange, productType, customDateRange }) => {
   const [data, setData] = useState([]);
@@ -20,18 +24,8 @@ const MonthlySalesGraph = ({ agroId, agroEmail, dateRange, productType, customDa
   const [chartType, setChartType] = useState('bar'); // 'bar' or 'line'
   const [yAxisType, setYAxisType] = useState('revenue'); // 'revenue' or 'quantity'
   const [showComparison, setShowComparison] = useState(false);
-  const [comparisonData, setComparisonData] = useState([]);
 
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
-
-  useEffect(() => {
-    loadSalesData();
-  }, [agroId, agroEmail, dateRange, productType, customDateRange]);
-
-  const loadSalesData = async () => {
+  const loadSalesData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -47,60 +41,47 @@ const MonthlySalesGraph = ({ agroId, agroEmail, dateRange, productType, customDa
       console.log('Loading sales data with params:', params);
       const response = await axios.get('/api/user/agro/analytics/monthly-sales', { params });
       console.log('Sales data response:', response.data);
-      
+
+      let comparisonByMonth = [];
+      if (showComparison) {
+        const comparisonResponse = await axios.get('/api/user/agro/analytics/monthly-sales', {
+          params: {
+            id: agroId,
+            email: agroEmail,
+            dateRange: 'previousYear',
+            productType,
+            ...customDateRange
+          }
+        });
+        comparisonByMonth = comparisonResponse.data;
+      }
+
       // Transform data for chart
-      const chartData = months.map((month, index) => {
+      const chartData = MONTHS.map((month, index) => {
         const monthData = response.data.find(item => item.month === index + 1);
+        const previousMonthData = comparisonByMonth.find(item => item.month === index + 1);
         return {
           month,
           revenue: monthData?.revenue || 0,
           quantity: monthData?.quantity || 0,
-          orders: monthData?.orders || 0
+          orders: monthData?.orders || 0,
+          revenue_prev: previousMonthData?.revenue || 0,
+          quantity_prev: previousMonthData?.quantity || 0
         };
       });
 
       setData(chartData);
-
-      // Load comparison data if enabled
-      if (showComparison) {
-        loadComparisonData();
-      }
     } catch (error) {
       console.error('Error loading sales data:', error);
       setError('Failed to load sales data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [agroId, agroEmail, dateRange, productType, customDateRange, showComparison]);
 
-  const loadComparisonData = async () => {
-    try {
-      // Load previous year data for comparison
-      const params = {
-        id: agroId,
-        email: agroEmail,
-        dateRange: 'previousYear',
-        productType,
-        ...customDateRange
-      };
-
-      const response = await axios.get('/api/user/agro/analytics/monthly-sales', { params });
-      
-      const comparisonChartData = months.map((month, index) => {
-        const monthData = response.data.find(item => item.month === index + 1);
-        return {
-          month,
-          revenue: monthData?.revenue || 0,
-          quantity: monthData?.quantity || 0,
-          orders: monthData?.orders || 0
-        };
-      });
-
-      setComparisonData(comparisonChartData);
-    } catch (error) {
-      console.error('Error loading comparison data:', error);
-    }
-  };
+  useEffect(() => {
+    loadSalesData();
+  }, [loadSalesData]);
 
   const exportData = async (format = 'csv') => {
     try {

@@ -1,17 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { 
   FaChartLine, 
   FaDownload, 
-  FaArrowUp, 
-  FaArrowDown,
   FaRupeeSign,
   FaBox,
   FaEye,
   FaEyeSlash,
   FaTrophy,
-  FaExclamationTriangle,
-  FaToggleOn,
-  FaToggleOff
+  FaExclamationTriangle
 } from 'react-icons/fa';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
@@ -27,11 +23,7 @@ const PopularProducts = ({ agroId, agroEmail, dateRange, productType, customDate
 
   const COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
 
-  useEffect(() => {
-    loadProductsData();
-  }, [agroId, agroEmail, dateRange, productType, customDateRange]);
-
-  const loadProductsData = async () => {
+  const loadProductsData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -56,7 +48,11 @@ const PopularProducts = ({ agroId, agroEmail, dateRange, productType, customDate
     } finally {
       setLoading(false);
     }
-  };
+  }, [agroId, agroEmail, dateRange, productType, customDateRange]);
+
+  useEffect(() => {
+    loadProductsData();
+  }, [loadProductsData]);
 
   const exportData = async (format = 'csv') => {
     try {
