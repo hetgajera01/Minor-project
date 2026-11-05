@@ -5,10 +5,10 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node local.js",
     "kill-port": "powershell -Command \"$proc = netstat -ano | Select-String ':5000 .*LISTENING'; if ($proc) { $pid = ($proc -split '\\s+')[-1].Trim(); taskkill /F /PID $pid }\"",
     "predev": "npm run kill-port",
-    "dev": "nodemon server.js"
+    "dev": "nodemon local.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

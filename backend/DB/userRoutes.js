@@ -34,7 +34,9 @@ import { v4 as uuidv4 }                          from "uuid";
 const router = express.Router();
 
 // File upload setup for logos and ID proofs
-const uploadsDir = path.resolve("uploads");
+const uploadsDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.resolve("uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }

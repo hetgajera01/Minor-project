@@ -94,19 +94,27 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
-app.use('/api/user', userRoutes);
-// Serve uploads statically
-app.use('/uploads', express.static(path.resolve('uploads')));
 
-const PORT = process.env.PORT || 5000;
-
-// Health check
+// Keep health checks available even while MongoDB is reconnecting.
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('MongoDB connection failed:', error.message);
+    res.status(503).json({ message: 'Database unavailable' });
+  }
 });
+
+app.use('/api/user', userRoutes);
+// Serve uploads statically
+const uploadsDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.resolve('uploads');
+app.use('/uploads', express.static(uploadsDir));
+
+export default app;
