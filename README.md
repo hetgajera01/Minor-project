@@ -1,4 +1,4 @@
-# Agri-Sathi - MERN Stack Project
+# Agri-Budget - MERN Stack Project
 
 A modern agricultural assistance platform built with the MERN stack (MongoDB, Express.js, React.js, Node.js).
 
